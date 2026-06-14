@@ -25,8 +25,8 @@ export default function CountersList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <BarChart3 className="w-6 h-6 text-yandex-yellow" aria-hidden="true" />
-          <h2 className="text-2xl font-bold">Счётчики Метрики</h2>
+          <BarChart3 className="w-6 h-6 text-primary" aria-hidden="true" />
+          <h2 className="text-headline-lg text-on-background">Счётчики Метрики</h2>
         </div>
         <LoadingButton
           onClick={() => refetch()}
@@ -59,21 +59,21 @@ export default function CountersList() {
           <button
             key={c.id}
             onClick={() => selectCounter(c)}
-            className={`text-left bg-yandex-card rounded-xl p-4 border transition hover:border-yandex-yellow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yandex-yellow/50 ${
+            className={`text-left bg-surface-elevated rounded-lg border shadow-subtle p-4 transition hover:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus ${
               selectedCounter?.id === c.id
-                ? 'border-yandex-yellow ring-1 ring-yandex-yellow/30'
-                : 'border-yandex-border'
+                ? 'border-primary ring-1 ring-primary/30'
+                : 'border-outline'
             }`}
             aria-label={`Выбрать счётчик ${c.name}`}
           >
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <div className="font-semibold">{c.name}</div>
-                <div className="text-sm text-gray-400">
+                <div className="text-body-md font-semibold text-on-background">{c.name}</div>
+                <div className="text-body-sm text-on-surface-muted">
                   ID: {c.id} · {c.site} · {c.status}
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-500" aria-hidden="true" />
+              <ChevronRight className="w-5 h-5 text-on-surface-muted" aria-hidden="true" />
             </div>
           </button>
         ))}

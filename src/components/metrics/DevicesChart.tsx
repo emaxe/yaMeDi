@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { type ChartDataPoint } from '../../types'
 import { ChartCard } from '../ui/ChartCard'
 
-const COLORS = ['#FFCC00', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
+const COLORS = ['#fe6e00', '#ffb74d', '#ff6b00', '#3080ff', '#00c758', '#fb2c36']
 
 interface DevicesChartProps {
   data: ChartDataPoint[]
@@ -29,8 +29,8 @@ export function DevicesChart({ data }: DevicesChartProps) {
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{ backgroundColor: '#16213e', border: '1px solid #0f3460', borderRadius: '8px' }}
-              itemStyle={{ color: '#fff' }}
+              contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e3e0dd', borderRadius: '8px' }}
+              itemStyle={{ color: '#423d38' }}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -40,9 +40,9 @@ export function DevicesChart({ data }: DevicesChartProps) {
               <div key={d.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                  <span className="text-sm">{d.name}</span>
+                  <span className="text-body-sm text-on-surface">{d.name}</span>
                 </div>
-                <div className="text-sm font-medium">
+                <div className="text-body-sm font-medium text-on-background">
                   {Number(d['ym:s:visits']).toLocaleString('ru-RU')}
                 </div>
               </div>

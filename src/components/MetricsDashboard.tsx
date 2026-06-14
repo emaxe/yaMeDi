@@ -14,7 +14,7 @@ import { DateRangePicker, type DateRange } from './ui/DateRangePicker'
 import { EmptyState } from './ui/EmptyState'
 import { ErrorAlert } from './ui/ErrorAlert'
 import { LoadingButton } from './ui/LoadingButton'
-import { SkeletonChart } from './ui/Skeleton'
+import { SkeletonCard, SkeletonChart } from './ui/Skeleton'
 
 function getDefaultDates() {
   const to = new Date()
@@ -134,10 +134,10 @@ export default function MetricsDashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <LineChartIcon className="w-6 h-6 text-yandex-yellow" aria-hidden="true" />
+          <LineChartIcon className="w-6 h-6 text-primary" aria-hidden="true" />
           <div>
-            <h2 className="text-2xl font-bold">Графики Метрики</h2>
-            <p className="text-sm text-gray-400">
+            <h2 className="text-headline-lg text-on-background">Графики Метрики</h2>
+            <p className="text-body-sm text-on-surface-muted">
               Счётчик: {selectedCounter.name} (ID: {selectedCounter.id})
             </p>
           </div>
@@ -171,10 +171,7 @@ export default function MetricsDashboard() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-yandex-card rounded-xl border border-yandex-border p-4 space-y-3">
-                <div className="h-4 w-1/2 rounded bg-yandex-border/50 animate-pulse" />
-                <div className="h-8 w-2/3 rounded bg-yandex-border/50 animate-pulse" />
-              </div>
+              <SkeletonCard key={i} className="h-24" />
             ))}
           </div>
           <SkeletonChart />

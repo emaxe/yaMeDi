@@ -10,13 +10,19 @@ interface ErrorAlertProps {
 
 export function ErrorAlert({ message, onRetry, className }: ErrorAlertProps) {
   return (
-    <div className={cn('bg-red-900/30 border border-red-700 rounded-xl p-4 flex items-center gap-3 text-red-200', className)}>
-      <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-      <span className="flex-1">{message}</span>
+    <div
+      className={cn(
+        'rounded-lg border border-danger/20 bg-danger/10 p-4 flex items-center gap-3 text-danger',
+        className,
+      )}
+    >
+      <AlertTriangle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
+      <span className="flex-1 text-body-md">{message}</span>
       {onRetry && (
         <button
+          type="button"
           onClick={onRetry}
-          className="flex items-center gap-1 px-3 py-1.5 text-sm bg-red-700/40 hover:bg-red-700/60 rounded-lg transition"
+          className="inline-flex items-center gap-1 px-3 py-1.5 text-label-sm rounded-sm bg-danger text-on-primary hover:bg-danger/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus"
         >
           <RefreshCw className="w-4 h-4" aria-hidden="true" />
           Повторить

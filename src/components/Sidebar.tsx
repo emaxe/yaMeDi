@@ -15,10 +15,14 @@ export default function Sidebar() {
   const { activeTab, setActiveTab, selectedCounter } = useApp()
 
   return (
-    <aside className="w-64 bg-yandex-card border-r border-yandex-border flex flex-col">
-      <div className="p-6 border-b border-yandex-border">
-        <h1 className="text-xl font-bold text-white">Yandex Dashboard</h1>
-        <p className="text-xs text-gray-400 mt-1">Метрика & Директ</p>
+    <aside
+      className={cn(
+        'w-64 shrink-0 flex flex-col',
+        'bg-shell-base/70 backdrop-blur-shell border-r border-white/10',
+      )}
+    >
+      <div className="p-4">
+        <p className="text-body-sm text-on-shell/50">Метрика & Директ</p>
       </div>
 
       <nav className="flex-1 p-3 space-y-1" aria-label="Основная навигация">
@@ -34,11 +38,12 @@ export default function Sidebar() {
               aria-current={isActive ? 'page' : undefined}
               aria-disabled={disabled ? 'true' : undefined}
               className={cn(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yandex-yellow/50',
+                'w-full flex items-center gap-3 px-3 py-1.5 rounded-md text-body-sm transition',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus',
                 isActive
-                  ? 'bg-yandex-yellow/10 text-yandex-yellow'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white',
-                disabled && 'opacity-40 cursor-not-allowed hover:bg-transparent hover:text-gray-400'
+                  ? 'bg-primary text-on-primary'
+                  : 'text-on-shell/70 hover:bg-white/10 hover:text-on-shell',
+                disabled && 'opacity-40 cursor-not-allowed hover:bg-transparent hover:text-on-shell/70'
               )}
               title={disabled ? 'Сначала выберите счётчик' : undefined}
             >
@@ -49,7 +54,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-yandex-border text-xs text-gray-500">
+      <div className="p-4 text-body-sm text-on-shell/50">
         Desktop App v1.0.0
       </div>
     </aside>

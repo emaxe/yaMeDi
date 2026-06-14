@@ -36,19 +36,19 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
   return (
     <div className="flex flex-col gap-2">
       <Card
-        className={`flex items-center gap-2 px-3 py-2 ${error ? 'border-red-700/60 ring-1 ring-red-700/30' : ''}`}
+        className={`flex items-center gap-2 px-3 py-2 ${error ? 'border-danger ring-1 ring-danger/30' : ''}`}
       >
-        <Calendar className="w-4 h-4 text-gray-400" aria-hidden="true" />
+        <Calendar className="w-4 h-4 text-on-surface-muted" aria-hidden="true" />
         <input
           type="date"
           value={value.from}
           max={value.to || undefined}
           onChange={(e) => onChange({ ...value, from: e.target.value })}
-          className="bg-transparent text-sm text-white outline-none"
+          className="bg-transparent text-body-sm text-on-surface outline-none"
           aria-label="Начало периода"
           aria-invalid={error ? 'true' : 'false'}
         />
-        <span className="text-gray-500" aria-hidden="true">
+        <span className="text-on-surface-muted" aria-hidden="true">
           —
         </span>
         <input
@@ -56,13 +56,13 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
           value={value.to}
           min={value.from || undefined}
           onChange={(e) => onChange({ ...value, to: e.target.value })}
-          className="bg-transparent text-sm text-white outline-none"
+          className="bg-transparent text-body-sm text-on-surface outline-none"
           aria-label="Конец периода"
           aria-invalid={error ? 'true' : 'false'}
         />
       </Card>
       {error && (
-        <div className="flex items-center gap-1.5 text-xs text-red-300" role="alert">
+        <div className="flex items-center gap-1.5 text-body-sm text-danger" role="alert">
           <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" />
           <span>{error}</span>
         </div>

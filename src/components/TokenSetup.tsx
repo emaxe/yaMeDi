@@ -64,13 +64,13 @@ export default function TokenSetup() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 mb-6">
-        <Key className="w-6 h-6 text-yandex-yellow" aria-hidden="true" />
-        <h2 className="text-2xl font-bold">Настройка OAuth-токена</h2>
+        <Key className="w-6 h-6 text-primary" aria-hidden="true" />
+        <h2 className="text-headline-lg text-on-background">Настройка OAuth-токена</h2>
       </div>
 
       <Card className="p-6 space-y-4">
         <div>
-          <label htmlFor="client-id" className="block text-sm font-medium text-gray-400 mb-2">
+          <label htmlFor="client-id" className="block text-label-sm text-on-surface-muted mb-2">
             Client ID приложения
           </label>
           <input
@@ -79,30 +79,31 @@ export default function TokenSetup() {
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
             placeholder="Введите Client ID"
-            className="w-full bg-yandex-dark border border-yandex-border rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-yandex-yellow"
+            className="w-full h-9 px-3 bg-surface-elevated border border-outline rounded-sm text-body-md text-on-surface placeholder:text-on-surface-muted focus:outline-none focus:border-primary-focus"
           />
         </div>
 
         <div className="flex gap-3">
           <button
+            type="button"
             onClick={openAuth}
-            className="flex items-center gap-2 px-4 py-2 bg-yandex-yellow text-black rounded-lg font-medium hover:brightness-110 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yandex-yellow/50"
+            className="inline-flex items-center gap-2 h-10 px-4 bg-primary text-on-primary rounded-sm text-label-md hover:bg-primary-strong transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus"
           >
             <ExternalLink className="w-4 h-4" aria-hidden="true" />
             Открыть страницу авторизации
           </button>
         </div>
 
-        <div className="bg-yandex-dark/50 rounded-lg p-4 text-sm text-gray-400">
+        <div className="bg-surface-soft rounded-lg p-4 text-body-md text-on-surface-muted">
           <p>После авторизации Яндекс перенаправит на:</p>
-          <code className="block mt-2 text-xs text-yandex-yellow break-all">
+          <code className="block mt-2 text-code-sm text-primary break-all">
             https://oauth.yandex.ru/verification_code#access_token=AQAAAA...
           </code>
           <p className="mt-2">Скопируйте значение токена и вставьте ниже.</p>
         </div>
 
         <div>
-          <label htmlFor="oauth-token" className="block text-sm font-medium text-gray-400 mb-2">
+          <label htmlFor="oauth-token" className="block text-label-sm text-on-surface-muted mb-2">
             OAuth-токен
           </label>
           <div className="flex gap-2">
@@ -117,13 +118,13 @@ export default function TokenSetup() {
                   if (error) setError(null)
                 }}
                 placeholder="Вставьте токен сюда"
-                className="w-full bg-yandex-dark border border-yandex-border rounded-lg px-4 py-2 pr-10 text-white placeholder-gray-600 focus:outline-none focus:border-yandex-yellow"
+                className="w-full h-9 px-3 pr-10 bg-surface-elevated border border-outline rounded-sm text-body-md text-on-surface placeholder:text-on-surface-muted focus:outline-none focus:border-primary-focus"
                 aria-invalid={error ? 'true' : 'false'}
                 aria-describedby={error ? 'token-error' : undefined}
               />
               <button
                 onClick={() => setShowToken(!showToken)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yandex-yellow/50 rounded p-1"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-muted hover:text-on-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus rounded p-1"
                 aria-label={showToken ? 'Скрыть токен' : 'Показать токен'}
                 type="button"
               >
@@ -134,7 +135,7 @@ export default function TokenSetup() {
               onClick={handleSave}
               loading={saving}
               loadingText="Сохранение..."
-              className={saved ? 'bg-green-600 text-white hover:brightness-110' : undefined}
+              className={saved ? 'bg-success hover:bg-success/90' : undefined}
               aria-label="Сохранить токен"
             >
               {saved ? <Check className="w-4 h-4" aria-hidden="true" /> : null}
@@ -143,7 +144,7 @@ export default function TokenSetup() {
             {hasToken && (
               <button
                 onClick={handleDelete}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600/20 text-red-300 border border-red-700 rounded-lg font-medium hover:bg-red-600/30 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+                className="inline-flex items-center gap-2 h-10 px-4 bg-danger/10 text-danger border border-danger/20 rounded-sm text-label-md hover:bg-danger/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus"
                 aria-label="Удалить сохранённый токен"
                 type="button"
               >

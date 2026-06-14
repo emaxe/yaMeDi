@@ -6,7 +6,7 @@ import { test, expect, _electron as electron } from '@playwright/test'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const executablePath = path.resolve(
   __dirname,
-  '../dist/mac/yandex-metrics-app.app/Contents/MacOS/yandex-metrics-app'
+  '../dist/mac/Yandex Metrics Dashboard.app/Contents/MacOS/Yandex Metrics Dashboard'
 )
 
 test.describe('Electron app', () => {
