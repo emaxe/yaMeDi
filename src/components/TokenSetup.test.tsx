@@ -14,6 +14,7 @@ beforeAll(() => {
     setToken: vi.fn(),
     deleteToken: vi.fn(),
     onMainProcessMessage: vi.fn(() => vi.fn()),
+    directFetch: vi.fn(),
   }
 })
 

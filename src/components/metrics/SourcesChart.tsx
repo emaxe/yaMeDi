@@ -1,39 +1,84 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
-import { type ChartDataPoint } from '../../types'
-import { ChartCard } from '../ui/ChartCard'
+import { getSources, useStatsComparison } from '../../api/metrica'
+import { buildComparisonData, transformMetricaData } from '../../lib/chartData'
+import { CHART_COLORS, gridStyle, labelStyle, tooltipStyle, axisStroke, tickStyle, previousPeriodColor } from '../../lib/chartTheme'
+import { exportToCsv } from '../../lib/csvExport'
+import { formatMetricValue, getMetricName } from '../../lib/metrics'
+import { DashboardWidget } from '../ui/DashboardWidget'
 
 interface SourcesChartProps {
-  data: ChartDataPoint[]
+  counterId: number
+  dateFrom: string
+  dateTo: string
 }
 
-export function SourcesChart({ data }: SourcesChartProps) {
+const METRICS = ['ym:s:visits', 'ym:s:users']
+const COLORS = [CHART_COLORS.primarySoft, CHART_COLORS.secondarySoft]
+const PREV_COLORS = [previousPeriodColor(CHART_COLORS.primarySoft), previousPeriodColor(CHART_COLORS.secondarySoft)]
+
+export function SourcesChart({ counterId, dateFrom, dateTo }: SourcesChartProps) {
+  const { current, previous } = useStatsComparison(
+    counterId,
+    { from: dateFrom, to: dateTo },
+    getSources,
+    'sources'
+  )
+
+  const currentData = transformMetricaData(current.data, 'name').slice(0, 10)
+  const previousData = transformMetricaData(previous.data, 'name').slice(0, 10)
+  const data = buildComparisonData(currentData, previousData, 'name', METRICS)
+
+  function handleExport() {
+    if (!currentData.length) return
+    exportToCsv(
+      `sources-${dateFrom}-${dateTo}.csv`,
+      [{ key: 'name', label: 'Источник' }, ...METRICS.map((m) => ({ key: m, label: getMetricName(m) }))],
+      currentData
+    )
+  }
+
   return (
-    <ChartCard title="Источники трафика">
+    <DashboardWidget
+      title="Источники трафика"
+      subtitle="Топ-10 источников"
+      isLoading={current.isLoading && !current.data}
+      error={current.error as Error | null}
+      onRetry={() => current.refetch()}
+      onExport={handleExport}
+    >
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data.slice(0, 10)}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e3e0dd" />
-          <XAxis dataKey="name" stroke="#797067" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={80} />
-          <YAxis stroke="#797067" tick={{ fontSize: 12 }} />
+        <BarChart data={data}>
+          <CartesianGrid {...gridStyle} />
+          <XAxis dataKey="name" {...axisStroke} tick={tickStyle} angle={-45} textAnchor="end" height={80} />
+          <YAxis {...axisStroke} tick={tickStyle} />
           <Tooltip
-            contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e3e0dd', borderRadius: '8px' }}
-            labelStyle={{ color: '#423d38' }}
-            itemStyle={{ color: '#423d38' }}
+            contentStyle={tooltipStyle}
+            labelStyle={labelStyle}
+            itemStyle={labelStyle}
+            formatter={(value: number, name: string) => [formatMetricValue(value), name]}
           />
           <Legend />
-          <Bar dataKey="ym:s:visits" fill="rgba(254, 110, 0, 0.60)" name="Визиты" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="ym:s:users" fill="rgba(48, 128, 255, 0.60)" name="Посетители" radius={[4, 4, 0, 0]} />
+          {METRICS.map((metric, index) => (
+            <Bar
+              key={metric}
+              dataKey={metric}
+              fill={COLORS[index]}
+              name={getMetricName(metric)}
+              radius={[4, 4, 0, 0]}
+            />
+          ))}
+          {METRICS.map((metric, index) => (
+            <Bar
+              key={`prev:${metric}`}
+              dataKey={`prev:${metric}`}
+              fill={PREV_COLORS[index]}
+              name={`${getMetricName(metric)} (прошлый период)`}
+              radius={[4, 4, 0, 0]}
+            />
+          ))}
         </BarChart>
       </ResponsiveContainer>
-    </ChartCard>
+    </DashboardWidget>
   )
 }

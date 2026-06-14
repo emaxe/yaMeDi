@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import http from 'node:http'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -16,6 +17,15 @@ process.env.VITE_PUBLIC = app.isPackaged
 interface SecureStoreSchema {
   encryptedToken?: string
 }
+
+interface DirectFetchOptions {
+  method?: 'GET' | 'POST'
+  headers?: Record<string, string>
+  body?: unknown
+  timeout?: number
+}
+
+const DIRECT_FETCH_TIMEOUT = 10000
 
 const secureStore = new Store<SecureStoreSchema>({ name: 'yandex-metrics-auth' })
 
@@ -76,8 +86,25 @@ function checkDevServer(url: string): Promise<boolean> {
   })
 }
 
+function resolvePreloadPath(): string {
+  const candidates = [
+    path.join(__dirname, 'preload.mjs'),
+    path.join(__dirname, 'preload.cjs'),
+    path.join(__dirname, '../dist-electron/preload.mjs'),
+    path.join(__dirname, '../dist-electron/preload.cjs'),
+  ]
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      console.log('[electron] preload resolved:', candidate)
+      return candidate
+    }
+  }
+  console.error('[electron] preload not found in candidates:', candidates)
+  return candidates[0]
+}
+
 async function createWindow() {
-  console.log('[electron] Creating window...')
+  console.log('[electron] Creating window... __dirname=', __dirname)
   const win = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -85,7 +112,7 @@ async function createWindow() {
     minHeight: 768,
     title: 'Yandex Metrics Dashboard',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'),
+      preload: resolvePreloadPath(),
       contextIsolation: true,
       nodeIntegration: false,
       webSecurity: true,
@@ -99,6 +126,15 @@ async function createWindow() {
 
   win.webContents.on('did-fail-load', (_, errorCode, errorDescription) => {
     console.error('[electron] Failed to load:', errorCode, errorDescription)
+  })
+
+  win.webContents.on('preload-error', (_, preloadPath, error) => {
+    console.error('[electron] Preload error:', preloadPath, error)
+  })
+
+  win.webContents.on('console-message', (_, level, message, line, sourceId) => {
+    const label = level === 0 ? 'VERBOSE' : level === 1 ? 'INFO' : level === 2 ? 'WARN' : 'ERROR'
+    console.log(`[renderer:${label}] ${sourceId}:${line}`, message)
   })
 
   win.webContents.on('will-navigate', (event, url) => {
@@ -199,6 +235,32 @@ ipcMain.handle('secure-store:set-token', (_, token: string) => {
 
 ipcMain.handle('secure-store:delete-token', () => {
   secureStore.delete('encryptedToken')
+})
+
+ipcMain.handle('direct:fetch', async (_, url: string, options: DirectFetchOptions) => {
+  console.log('[direct:fetch] ipc called', url, options.method ?? 'GET')
+  if (!isTrustedExternalUrl(url)) {
+    console.error('[direct:fetch] blocked untrusted URL', url)
+    throw new Error(`Blocked direct fetch to untrusted URL: ${url}`)
+  }
+
+  const timeout = options.timeout ?? DIRECT_FETCH_TIMEOUT
+  const signal = AbortSignal.timeout(timeout)
+
+  try {
+    const response = await fetch(url, {
+      method: options.method ?? 'GET',
+      headers: options.headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      signal,
+    })
+    const body = await response.text()
+    console.log('[direct:fetch] response', response.status, body.slice(0, 200))
+    return { status: response.status, body }
+  } catch (err) {
+    console.error('[direct:fetch] Network error:', err)
+    throw err
+  }
 })
 
 process.on('uncaughtException', (err) => {

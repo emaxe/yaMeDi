@@ -1,125 +1,45 @@
-import { format, isAfter, parseISO, startOfDay } from 'date-fns'
+import { useQueryClient } from '@tanstack/react-query'
 import { LineChart as LineChartIcon, RefreshCw } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 
-import { useDevices, useSources, useTrafficSummary } from '../api/metrica'
 import { useApp } from '../hooks/useApp'
-import { type ChartDataPoint } from '../types'
+import { getDefaultDates, isValidDateRange } from '../lib/dateRanges'
 
+import { AudienceChart } from './metrics/AudienceChart'
+import { BrowsersChart } from './metrics/BrowsersChart'
 import { DevicesChart } from './metrics/DevicesChart'
+import { GeoChart } from './metrics/GeoChart'
+import { OSChart } from './metrics/OSChart'
+import { PagesChart } from './metrics/PagesChart'
+import { SearchPhrasesChart } from './metrics/SearchPhrasesChart'
 import { SourcesChart } from './metrics/SourcesChart'
+import { TopReferrersChart } from './metrics/TopReferrersChart'
 import { TotalsSection } from './metrics/TotalsSection'
 import { TrafficChart } from './metrics/TrafficChart'
 import { DateRangePicker, type DateRange } from './ui/DateRangePicker'
 import { EmptyState } from './ui/EmptyState'
 import { ErrorAlert } from './ui/ErrorAlert'
 import { LoadingButton } from './ui/LoadingButton'
-import { SkeletonCard, SkeletonChart } from './ui/Skeleton'
-
-function getDefaultDates() {
-  const to = new Date()
-  const from = new Date(to.getTime() - 7 * 24 * 60 * 60 * 1000)
-  return {
-    from: format(from, 'yyyy-MM-dd'),
-    to: format(to, 'yyyy-MM-dd'),
-  }
-}
-
-function isValidDateRange(dates: DateRange): boolean {
-  if (!dates.from || !dates.to) return false
-  const fromDate = parseISO(dates.from)
-  const toDate = parseISO(dates.to)
-  const today = startOfDay(new Date())
-  return !isAfter(fromDate, toDate) && !isAfter(toDate, today)
-}
 
 export default function MetricsDashboard() {
   const { selectedCounter } = useApp()
   const counterId = selectedCounter?.id
-  const [dates, setDates] = useState(getDefaultDates)
+  const queryClient = useQueryClient()
+  const [dates, setDates] = useState<DateRange>(getDefaultDates)
+  const [globalError, setGlobalError] = useState<string | null>(null)
 
-  const {
-    data: traffic,
-    isLoading: trafficLoading,
-    isError: trafficError,
-    error: trafficErrorMessage,
-    refetch: refetchTraffic,
-  } = useTrafficSummary(counterId, dates.from, dates.to)
-  const {
-    data: sources,
-    isLoading: sourcesLoading,
-    isError: sourcesError,
-    error: sourcesErrorMessage,
-    refetch: refetchSources,
-  } = useSources(counterId, dates.from, dates.to)
-  const {
-    data: devices,
-    isLoading: devicesLoading,
-    isError: devicesError,
-    error: devicesErrorMessage,
-    refetch: refetchDevices,
-  } = useDevices(counterId, dates.from, dates.to)
-
-  const loading = trafficLoading || sourcesLoading || devicesLoading
-  const errorMessage = trafficErrorMessage || sourcesErrorMessage || devicesErrorMessage
-  const hasError = trafficError || sourcesError || devicesError
-
-  const refetchAll = () => {
-    refetchTraffic()
-    refetchSources()
-    refetchDevices()
-  }
-
-  useEffect(() => {
-    if (!counterId || !isValidDateRange(dates)) return
-    if (traffic === undefined && sources === undefined && devices === undefined && !loading && !hasError) {
-      refetchAll()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [counterId, dates, traffic, sources, devices, loading, hasError])
-
-  const trafficData = useMemo<ChartDataPoint[]>(() => {
-    if (!traffic?.data) return []
-    const metrics = traffic.query.metrics
-    return traffic.data.map((row) => {
-      const date = row.dimensions[0]?.name || ''
-      const point: ChartDataPoint = { date }
-      row.metrics.forEach((v, i) => {
-        point[metrics[i]] = v
-      })
-      return point
-    })
-  }, [traffic])
-
-  const sourcesData = useMemo<ChartDataPoint[]>(() => {
-    if (!sources?.data) return []
-    const metrics = sources.query.metrics
-    return sources.data.map((row) => {
-      const name = row.dimensions[0]?.name || ''
-      const point: ChartDataPoint = { name }
-      row.metrics.forEach((v, i) => {
-        point[metrics[i]] = v
-      })
-      return point
-    })
-  }, [sources])
-
-  const devicesData = useMemo<ChartDataPoint[]>(() => {
-    if (!devices?.data) return []
-    const metrics = devices.query.metrics
-    return devices.data.map((row) => {
-      const name = row.dimensions[0]?.name || ''
-      const point: ChartDataPoint = { name }
-      row.metrics.forEach((v, i) => {
-        point[metrics[i]] = v
-      })
-      return point
-    })
-  }, [devices])
-
-  const totals = traffic?.totals
-  const isFirstLoad = loading && traffic === undefined && sources === undefined && devices === undefined
   const datesValid = isValidDateRange(dates)
+
+  function refetchAll() {
+    if (!counterId || !datesValid) return
+    setGlobalError(null)
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        const key = query.queryKey
+        return Array.isArray(key) && key.includes(counterId)
+      },
+    })
+  }
 
   if (!selectedCounter) {
     return (
@@ -128,6 +48,10 @@ export default function MetricsDashboard() {
         hint="Перейдите в раздел «Счётчики» и выберите один из доступных счётчиков, чтобы увидеть графики."
       />
     )
+  }
+
+  if (!counterId) {
+    return <ErrorAlert message="Не удалось определить идентификатор счётчика" />
   }
 
   return (
@@ -146,7 +70,7 @@ export default function MetricsDashboard() {
           <DateRangePicker value={dates} onChange={setDates} />
           <LoadingButton
             onClick={refetchAll}
-            loading={loading}
+            loading={false}
             loadingText="Загрузка..."
             disabled={!datesValid}
           >
@@ -156,44 +80,37 @@ export default function MetricsDashboard() {
         </div>
       </div>
 
-      {hasError && (
-        <ErrorAlert
-          message={errorMessage?.message ?? 'Неизвестная ошибка'}
-          onRetry={refetchAll}
-        />
-      )}
-
-      {!datesValid && !hasError && (
+      {!datesValid && (
         <ErrorAlert message="Выберите корректный период: начало не позже конца, даты не в будущем" />
       )}
 
-      {isFirstLoad && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonCard key={i} className="h-24" />
-            ))}
-          </div>
-          <SkeletonChart />
-          <SkeletonChart />
-          <SkeletonChart />
-        </div>
-      )}
+      {globalError && <ErrorAlert message={globalError} onRetry={refetchAll} />}
 
-      {totals && traffic && !loading && <TotalsSection metrics={traffic.query.metrics} totals={totals} />}
+      <TotalsSection counterId={counterId} dateFrom={dates.from} dateTo={dates.to} />
 
-      {trafficData.length > 0 && !loading && <TrafficChart data={trafficData} />}
+      <TrafficChart counterId={counterId} dateFrom={dates.from} dateTo={dates.to} />
 
-      {sourcesData.length > 0 && !loading && <SourcesChart data={sourcesData} />}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SourcesChart counterId={counterId} dateFrom={dates.from} dateTo={dates.to} />
+        <DevicesChart counterId={counterId} dateFrom={dates.from} dateTo={dates.to} />
+      </div>
 
-      {devicesData.length > 0 && !loading && <DevicesChart data={devicesData} />}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <GeoChart counterId={counterId} dateFrom={dates.from} dateTo={dates.to} />
+        <AudienceChart counterId={counterId} dateFrom={dates.from} dateTo={dates.to} />
+      </div>
 
-      {!traffic && !loading && !hasError && datesValid && (
-        <EmptyState
-          message="Выберите период и нажмите «Загрузить»"
-          hint="Данные за выбранный период появятся здесь после загрузки."
-        />
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <BrowsersChart counterId={counterId} dateFrom={dates.from} dateTo={dates.to} />
+        <OSChart counterId={counterId} dateFrom={dates.from} dateTo={dates.to} />
+      </div>
+
+      <PagesChart counterId={counterId} dateFrom={dates.from} dateTo={dates.to} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SearchPhrasesChart counterId={counterId} dateFrom={dates.from} dateTo={dates.to} />
+        <TopReferrersChart counterId={counterId} dateFrom={dates.from} dateTo={dates.to} />
+      </div>
     </div>
   )
 }

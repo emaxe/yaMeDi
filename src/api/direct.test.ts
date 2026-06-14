@@ -5,16 +5,16 @@ import { getAdReport, getCampaignReport, getCampaigns, getSearchTermsReport, par
 
 const TOKEN = 'test-token'
 
-function mockFetch(response: Response) {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response))
+function mockDirectFetch(response: { status: number; body: string }) {
+  vi.stubGlobal('window', { electronAPI: { directFetch: vi.fn().mockResolvedValue(response) } })
 }
 
 function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), { status })
+  return { status, body: JSON.stringify(body) }
 }
 
 function textResponse(body: string, status = 200) {
-  return new Response(body, { status })
+  return { status, body }
 }
 
 beforeEach(() => {
@@ -65,7 +65,7 @@ describe('getCampaigns', () => {
         ],
       },
     }
-    mockFetch(jsonResponse(body))
+    mockDirectFetch(jsonResponse(body))
 
     const campaigns = await getCampaigns(TOKEN)
     expect(campaigns).toHaveLength(1)
@@ -80,13 +80,13 @@ describe('getCampaigns', () => {
   })
 
   it('returns empty array when result is missing', async () => {
-    mockFetch(jsonResponse({}))
+    mockDirectFetch(jsonResponse({}))
     const campaigns = await getCampaigns(TOKEN)
     expect(campaigns).toEqual([])
   })
 
   it('throws ApiError on non-ok response', async () => {
-    mockFetch(jsonResponse({ error: { error_code: 1, error_string: 'Auth error' } }, 401))
+    mockDirectFetch(jsonResponse({ error: { error_code: 1, error_string: 'Auth error' } }, 401))
     await expect(getCampaigns(TOKEN)).rejects.toBeInstanceOf(ApiError)
   })
 })
@@ -94,7 +94,7 @@ describe('getCampaigns', () => {
 describe('getCampaignReport', () => {
   it('returns parsed report rows', async () => {
     const tsv = 'CampaignName\tCampaignId\tImpressions\tClicks\tCost\tCtr\tAvgCpc\tConversions\nTest\t123\t1000\t50\t5000\t5\t100\t2'
-    mockFetch(textResponse(tsv))
+    mockDirectFetch(textResponse(tsv))
 
     const rows = await getCampaignReport(TOKEN, '2024-01-01', '2024-01-31')
     expect(rows).toHaveLength(1)
@@ -111,14 +111,14 @@ describe('getCampaignReport', () => {
   })
 
   it('throws when report is in progress', async () => {
-    mockFetch(textResponse('In progress'))
+    mockDirectFetch(textResponse('In progress'))
     await expect(getCampaignReport(TOKEN, '2024-01-01', '2024-01-31')).rejects.toBeInstanceOf(ApiError)
   })
 })
 
 describe('getAdReport', () => {
   it('returns report text', async () => {
-    mockFetch(textResponse('Ad report content'))
+    mockDirectFetch(textResponse('Ad report content'))
     const text = await getAdReport(TOKEN, '2024-01-01', '2024-01-31')
     expect(text).toBe('Ad report content')
   })
@@ -126,7 +126,7 @@ describe('getAdReport', () => {
 
 describe('getSearchTermsReport', () => {
   it('returns report text', async () => {
-    mockFetch(textResponse('Search terms report'))
+    mockDirectFetch(textResponse('Search terms report'))
     const text = await getSearchTermsReport(TOKEN, '2024-01-01', '2024-01-31')
     expect(text).toBe('Search terms report')
   })

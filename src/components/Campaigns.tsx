@@ -30,6 +30,12 @@ export default function Campaigns() {
     }
   }, [campaigns, isLoading, isError, refetch])
 
+  useEffect(() => {
+    if (isError && error) {
+      console.error('[Campaigns] useCampaigns error:', error)
+    }
+  }, [isError, error])
+
   const isFirstLoad = isLoading && campaigns === undefined
 
   return (

@@ -32,4 +32,15 @@ test.describe('Electron app', () => {
 
     await electronApp.close()
   })
+
+  test('opens metrics dashboard tab with empty state', async () => {
+    const electronApp = await electron.launch({ executablePath })
+    const window = await electronApp.firstWindow()
+
+    await window.click('text=Графики')
+    await expect(window.locator('text=Графики Метрики')).toBeVisible()
+    await expect(window.locator('text=Сначала выберите счётчик')).toBeVisible()
+
+    await electronApp.close()
+  })
 })

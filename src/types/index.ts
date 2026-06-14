@@ -147,3 +147,15 @@ export type ChartDataPoint = {
   name?: string
   [metric: string]: string | number | undefined
 }
+
+export type ComparisonPoint = {
+  current: ChartDataPoint
+  previous: ChartDataPoint
+}
+
+export type WidgetData = {
+  data: ChartDataPoint[]
+  totals: number[]
+  metrics: string[]
+  dimensions: string[]
+}
