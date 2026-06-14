@@ -1,70 +1,70 @@
-import { BarChart3, RefreshCw, AlertTriangle, ChevronRight } from 'lucide-react'
-import { useState, useCallback } from 'react'
+import { BarChart3, ChevronRight } from 'lucide-react'
+import { useEffect } from 'react'
 
-import { getCounters } from '../api/yandexApi'
-import { Counter } from '../types'
+import { useCounters } from '../api/metrica'
+import { useApp } from '../hooks/useApp'
 
-interface CountersListProps {
-  onSelectCounter: (counter: Counter) => void
-  selectedCounterId?: number
-}
+import { EmptyState } from './ui/EmptyState'
+import { ErrorAlert } from './ui/ErrorAlert'
+import { LoadingButton } from './ui/LoadingButton'
+import { SkeletonCard } from './ui/Skeleton'
 
-export default function CountersList({ onSelectCounter, selectedCounterId }: CountersListProps) {
-  const [counters, setCounters] = useState<Counter[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [loaded, setLoaded] = useState(false)
+export default function CountersList() {
+  const { selectCounter, selectedCounter } = useApp()
+  const { data: counters, isLoading, isError, error, refetch, isSuccess } = useCounters()
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const data = await getCounters()
-      setCounters(data)
-      setLoaded(true)
-    } catch (e) {
-      setError((e as Error).message)
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    if (counters === undefined && !isLoading && !isError) {
+      refetch()
     }
-  }, [])
+  }, [counters, isLoading, isError, refetch])
+
+  const isFirstLoad = isLoading && counters === undefined
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <BarChart3 className="w-6 h-6 text-yandex-yellow" />
+          <BarChart3 className="w-6 h-6 text-yandex-yellow" aria-hidden="true" />
           <h2 className="text-2xl font-bold">Счётчики Метрики</h2>
         </div>
-        <button
-          onClick={load}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-yandex-yellow text-black rounded-lg font-medium hover:brightness-110 transition disabled:opacity-50"
+        <LoadingButton
+          onClick={() => refetch()}
+          loading={isLoading}
+          loadingText="Загрузка..."
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          {loading ? 'Загрузка...' : loaded ? 'Обновить' : 'Загрузить'}
-        </button>
+          {isSuccess ? 'Обновить' : 'Загрузить'}
+        </LoadingButton>
       </div>
 
-      {error && (
-        <div className="bg-red-900/30 border border-red-700 rounded-xl p-4 flex items-center gap-3 text-red-200">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-          <span>{error}</span>
-        </div>
+      {isError && <ErrorAlert message={error?.message ?? 'Неизвестная ошибка'} onRetry={() => refetch()} />}
+
+      {isSuccess && counters.length === 0 && (
+        <EmptyState
+          message="Нет доступных счётчиков"
+          hint="Убедитесь, что токен имеет доступ к Яндекс Метрике, и попробуйте обновить список."
+        />
       )}
 
-      {counters.length === 0 && loaded && !error && (
-        <div className="text-gray-400 text-center py-12">Нет доступных счётчиков</div>
+      {isFirstLoad && (
+        <div className="grid gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       )}
 
       <div className="grid gap-3">
-        {counters.map((c) => (
+        {counters?.map((c) => (
           <button
             key={c.id}
-            onClick={() => onSelectCounter(c)}
-            className={`text-left bg-yandex-card rounded-xl p-4 border transition hover:border-yandex-yellow ${
-              selectedCounterId === c.id ? 'border-yandex-yellow ring-1 ring-yandex-yellow/30' : 'border-yandex-border'
+            onClick={() => selectCounter(c)}
+            className={`text-left bg-yandex-card rounded-xl p-4 border transition hover:border-yandex-yellow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yandex-yellow/50 ${
+              selectedCounter?.id === c.id
+                ? 'border-yandex-yellow ring-1 ring-yandex-yellow/30'
+                : 'border-yandex-border'
             }`}
+            aria-label={`Выбрать счётчик ${c.name}`}
           >
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -73,7 +73,7 @@ export default function CountersList({ onSelectCounter, selectedCounterId }: Cou
                   ID: {c.id} · {c.site} · {c.status}
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-500" />
+              <ChevronRight className="w-5 h-5 text-gray-500" aria-hidden="true" />
             </div>
           </button>
         ))}

@@ -1,0 +1,56 @@
+appId: com.yandex-metrics.app
+productName: Yandex Metrics Dashboard
+copyright: 'Copyright © 2026'
+directories:
+  output: dist
+  buildResources: public
+files:
+  - dist
+  - dist-electron
+  - package.json
+  - '!**/*.map'
+  - '!**/*.d.ts'
+  - '!**/*.ts'
+  - '!src/**/*'
+  - '!electron/**/*'
+  - '!e2e/**/*'
+  - '!tests/**/*'
+  - '!**/*.test.*'
+  - '!**/*.spec.*'
+  - '!playwright.config.ts'
+  - '!vitest.config.ts'
+  - '!eslint.config.js'
+  - '!postcss.config.js'
+  - '!tailwind.config.js'
+  - '!vite.config.ts'
+  - '!*.local'
+  - '!*.md'
+  - '!node_modules/.cache'
+  - '!node_modules/.bin'
+  - '!node_modules/**/*.map'
+  - '!node_modules/**/*.d.ts'
+mac:
+  category: public.app-category.utilities
+  icon: icon.icns
+  target:
+    - zip
+    - dmg
+win:
+  icon: icon.ico
+  target:
+    - nsis
+    - portable
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+linux:
+  icon: icon.png
+  category: Utility
+  maintainer: Yandex Metrics App
+  vendor: Yandex Metrics App
+  target:
+    - AppImage
+    - deb
+publish:
+  provider: github

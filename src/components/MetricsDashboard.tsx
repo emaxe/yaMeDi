@@ -1,29 +1,20 @@
-import { format } from 'date-fns'
-import { LineChart as LineChartIcon, RefreshCw, AlertTriangle, Calendar } from 'lucide-react'
-import { useState, useCallback, useMemo } from 'react'
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts'
+import { format, isAfter, parseISO, startOfDay } from 'date-fns'
+import { LineChart as LineChartIcon, RefreshCw } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 
-import { getTrafficSummary, getSources, getDevices } from '../api/yandexApi'
-import { MetricaData, Counter } from '../types'
+import { useDevices, useSources, useTrafficSummary } from '../api/metrica'
+import { useApp } from '../hooks/useApp'
+import { type ChartDataPoint } from '../types'
 
-
-interface MetricsDashboardProps {
-  counter: Counter
-}
+import { DevicesChart } from './metrics/DevicesChart'
+import { SourcesChart } from './metrics/SourcesChart'
+import { TotalsSection } from './metrics/TotalsSection'
+import { TrafficChart } from './metrics/TrafficChart'
+import { DateRangePicker, type DateRange } from './ui/DateRangePicker'
+import { EmptyState } from './ui/EmptyState'
+import { ErrorAlert } from './ui/ErrorAlert'
+import { LoadingButton } from './ui/LoadingButton'
+import { SkeletonChart } from './ui/Skeleton'
 
 function getDefaultDates() {
   const to = new Date()
@@ -34,232 +25,177 @@ function getDefaultDates() {
   }
 }
 
-const COLORS = ['#FFCC00', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
+function isValidDateRange(dates: DateRange): boolean {
+  if (!dates.from || !dates.to) return false
+  const fromDate = parseISO(dates.from)
+  const toDate = parseISO(dates.to)
+  const today = startOfDay(new Date())
+  return !isAfter(fromDate, toDate) && !isAfter(toDate, today)
+}
 
-export default function MetricsDashboard({ counter }: MetricsDashboardProps) {
-  const [dates, setDates] = useState(getDefaultDates())
-  const [traffic, setTraffic] = useState<MetricaData | null>(null)
-  const [sources, setSources] = useState<MetricaData | null>(null)
-  const [devices, setDevices] = useState<MetricaData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+export default function MetricsDashboard() {
+  const { selectedCounter } = useApp()
+  const counterId = selectedCounter?.id
+  const [dates, setDates] = useState(getDefaultDates)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const [t, s, d] = await Promise.all([
-        getTrafficSummary(counter.id, dates.from, dates.to),
-        getSources(counter.id, dates.from, dates.to),
-        getDevices(counter.id, dates.from, dates.to),
-      ])
-      setTraffic(t)
-      setSources(s)
-      setDevices(d)
-    } catch (e) {
-      setError((e as Error).message)
-    } finally {
-      setLoading(false)
+  const {
+    data: traffic,
+    isLoading: trafficLoading,
+    isError: trafficError,
+    error: trafficErrorMessage,
+    refetch: refetchTraffic,
+  } = useTrafficSummary(counterId, dates.from, dates.to)
+  const {
+    data: sources,
+    isLoading: sourcesLoading,
+    isError: sourcesError,
+    error: sourcesErrorMessage,
+    refetch: refetchSources,
+  } = useSources(counterId, dates.from, dates.to)
+  const {
+    data: devices,
+    isLoading: devicesLoading,
+    isError: devicesError,
+    error: devicesErrorMessage,
+    refetch: refetchDevices,
+  } = useDevices(counterId, dates.from, dates.to)
+
+  const loading = trafficLoading || sourcesLoading || devicesLoading
+  const errorMessage = trafficErrorMessage || sourcesErrorMessage || devicesErrorMessage
+  const hasError = trafficError || sourcesError || devicesError
+
+  const refetchAll = () => {
+    refetchTraffic()
+    refetchSources()
+    refetchDevices()
+  }
+
+  useEffect(() => {
+    if (!counterId || !isValidDateRange(dates)) return
+    if (traffic === undefined && sources === undefined && devices === undefined && !loading && !hasError) {
+      refetchAll()
     }
-  }, [counter.id, dates])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [counterId, dates, traffic, sources, devices, loading, hasError])
 
-  const trafficData = useMemo(() => {
+  const trafficData = useMemo<ChartDataPoint[]>(() => {
     if (!traffic?.data) return []
     const metrics = traffic.query.metrics
     return traffic.data.map((row) => {
       const date = row.dimensions[0]?.name || ''
-      const obj: Record<string, string | number> = { date }
+      const point: ChartDataPoint = { date }
       row.metrics.forEach((v, i) => {
-        obj[metrics[i]] = v
+        point[metrics[i]] = v
       })
-      return obj
+      return point
     })
   }, [traffic])
 
-  const sourcesData = useMemo(() => {
+  const sourcesData = useMemo<ChartDataPoint[]>(() => {
     if (!sources?.data) return []
     const metrics = sources.query.metrics
     return sources.data.map((row) => {
-      const source = row.dimensions[0]?.name || ''
-      const obj: Record<string, string | number> = { name: source }
+      const name = row.dimensions[0]?.name || ''
+      const point: ChartDataPoint = { name }
       row.metrics.forEach((v, i) => {
-        obj[metrics[i]] = v
+        point[metrics[i]] = v
       })
-      return obj
+      return point
     })
   }, [sources])
 
-  const devicesData = useMemo(() => {
+  const devicesData = useMemo<ChartDataPoint[]>(() => {
     if (!devices?.data) return []
     const metrics = devices.query.metrics
     return devices.data.map((row) => {
-      const category = row.dimensions[0]?.name || ''
-      const obj: Record<string, string | number> = { name: category }
+      const name = row.dimensions[0]?.name || ''
+      const point: ChartDataPoint = { name }
       row.metrics.forEach((v, i) => {
-        obj[metrics[i]] = v
+        point[metrics[i]] = v
       })
-      return obj
+      return point
     })
   }, [devices])
 
   const totals = traffic?.totals
+  const isFirstLoad = loading && traffic === undefined && sources === undefined && devices === undefined
+  const datesValid = isValidDateRange(dates)
+
+  if (!selectedCounter) {
+    return (
+      <EmptyState
+        message="Сначала выберите счётчик"
+        hint="Перейдите в раздел «Счётчики» и выберите один из доступных счётчиков, чтобы увидеть графики."
+      />
+    )
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <LineChartIcon className="w-6 h-6 text-yandex-yellow" />
+          <LineChartIcon className="w-6 h-6 text-yandex-yellow" aria-hidden="true" />
           <div>
             <h2 className="text-2xl font-bold">Графики Метрики</h2>
             <p className="text-sm text-gray-400">
-              Счётчик: {counter.name} (ID: {counter.id})
+              Счётчик: {selectedCounter.name} (ID: {selectedCounter.id})
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-yandex-card rounded-lg px-3 py-2 border border-yandex-border">
-            <Calendar className="w-4 h-4 text-gray-400" />
-            <input
-              type="date"
-              value={dates.from}
-              onChange={(e) => setDates((d) => ({ ...d, from: e.target.value }))}
-              className="bg-transparent text-sm text-white outline-none"
-            />
-            <span className="text-gray-500">—</span>
-            <input
-              type="date"
-              value={dates.to}
-              onChange={(e) => setDates((d) => ({ ...d, to: e.target.value }))}
-              className="bg-transparent text-sm text-white outline-none"
-            />
-          </div>
-          <button
-            onClick={load}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-yandex-yellow text-black rounded-lg font-medium hover:brightness-110 transition disabled:opacity-50"
+          <DateRangePicker value={dates} onChange={setDates} />
+          <LoadingButton
+            onClick={refetchAll}
+            loading={loading}
+            loadingText="Загрузка..."
+            disabled={!datesValid}
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Загрузка...' : 'Загрузить'}
-          </button>
+            <RefreshCw className="w-4 h-4" aria-hidden="true" />
+            Загрузить
+          </LoadingButton>
         </div>
       </div>
 
-      {error && (
-        <div className="bg-red-900/30 border border-red-700 rounded-xl p-4 flex items-center gap-3 text-red-200">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-          <span>{error}</span>
-        </div>
+      {hasError && (
+        <ErrorAlert
+          message={errorMessage?.message ?? 'Неизвестная ошибка'}
+          onRetry={refetchAll}
+        />
       )}
 
-      {/* Totals */}
-      {totals && traffic && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {traffic.query.metrics.map((m, i) => (
-            <div key={m} className="bg-yandex-card rounded-xl p-4 border border-yandex-border">
-              <div className="text-sm text-gray-400 mb-1">{m.replace('ym:s:', '')}</div>
-              <div className="text-2xl font-bold text-white">
-                {Number(totals[i]).toLocaleString('ru-RU', { maximumFractionDigits: 2 })}
+      {!datesValid && !hasError && (
+        <ErrorAlert message="Выберите корректный период: начало не позже конца, даты не в будущем" />
+      )}
+
+      {isFirstLoad && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-yandex-card rounded-xl border border-yandex-border p-4 space-y-3">
+                <div className="h-4 w-1/2 rounded bg-yandex-border/50 animate-pulse" />
+                <div className="h-8 w-2/3 rounded bg-yandex-border/50 animate-pulse" />
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Traffic chart */}
-      {trafficData.length > 0 && (
-        <div className="bg-yandex-card rounded-xl p-6 border border-yandex-border">
-          <h3 className="text-lg font-semibold mb-4">Трафик по дням</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={trafficData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#0f3460" />
-              <XAxis dataKey="date" stroke="#94a3b8" tick={{ fontSize: 12 }} />
-              <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#16213e', border: '1px solid #0f3460', borderRadius: '8px' }}
-                labelStyle={{ color: '#fff' }}
-                itemStyle={{ color: '#fff' }}
-              />
-              <Legend />
-              <Line type="monotone" dataKey="ym:s:visits" stroke="#FFCC00" name="Визиты" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="ym:s:pageviews" stroke="#4ECDC4" name="Просмотры" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="ym:s:users" stroke="#FF6B6B" name="Посетители" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Sources chart */}
-      {sourcesData.length > 0 && (
-        <div className="bg-yandex-card rounded-xl p-6 border border-yandex-border">
-          <h3 className="text-lg font-semibold mb-4">Источники трафика</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={sourcesData.slice(0, 10)}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#0f3460" />
-              <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={80} />
-              <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#16213e', border: '1px solid #0f3460', borderRadius: '8px' }}
-                labelStyle={{ color: '#fff' }}
-                itemStyle={{ color: '#fff' }}
-              />
-              <Legend />
-              <Bar dataKey="ym:s:visits" fill="#FFCC00" name="Визиты" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="ym:s:users" fill="#4ECDC4" name="Посетители" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Devices pie chart */}
-      {devicesData.length > 0 && (
-        <div className="bg-yandex-card rounded-xl p-6 border border-yandex-border">
-          <h3 className="text-lg font-semibold mb-4">Устройства</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={devicesData}
-                  dataKey="ym:s:visits"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {devicesData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#16213e', border: '1px solid #0f3460', borderRadius: '8px' }}
-                  itemStyle={{ color: '#fff' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex items-center">
-              <div className="space-y-3 w-full">
-                {devicesData.map((d, i) => (
-                  <div key={d.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                      />
-                      <span className="text-sm">{d.name}</span>
-                    </div>
-                    <div className="text-sm font-medium">
-                      {Number(d['ym:s:visits']).toLocaleString('ru-RU')}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
+          <SkeletonChart />
+          <SkeletonChart />
+          <SkeletonChart />
         </div>
       )}
 
-      {!traffic && !loading && !error && (
-        <div className="text-gray-400 text-center py-12">Выберите период и нажмите «Загрузить»</div>
+      {totals && traffic && !loading && <TotalsSection metrics={traffic.query.metrics} totals={totals} />}
+
+      {trafficData.length > 0 && !loading && <TrafficChart data={trafficData} />}
+
+      {sourcesData.length > 0 && !loading && <SourcesChart data={sourcesData} />}
+
+      {devicesData.length > 0 && !loading && <DevicesChart data={devicesData} />}
+
+      {!traffic && !loading && !hasError && datesValid && (
+        <EmptyState
+          message="Выберите период и нажмите «Загрузить»"
+          hint="Данные за выбранный период появятся здесь после загрузки."
+        />
       )}
     </div>
   )

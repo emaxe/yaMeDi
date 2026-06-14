@@ -1,21 +1,31 @@
-import { Key, ExternalLink, Eye, EyeOff, Save, Check } from 'lucide-react'
+import { Check, ExternalLink, Eye, EyeOff, Key, Trash2 } from 'lucide-react'
 import { useState, useCallback } from 'react'
 
-import { setToken, getToken } from '../api/yandexApi'
+import { useAuth } from '../hooks/useAuth'
 
-declare global {
-  interface Window {
-    electronAPI?: {
-      openExternal: (url: string) => Promise<void>
-    }
+import { Card } from './ui/Card'
+import { ErrorAlert } from './ui/ErrorAlert'
+import { LoadingButton } from './ui/LoadingButton'
+
+function isValidTokenFormat(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return 'Введите токен'
+  if (trimmed.length < 10) return 'Токен слишком короткий'
+  if (/\s/.test(trimmed)) return 'Токен не должен содержать пробелов'
+  if (!/^[A-Za-z0-9_.~+/-]+$/.test(trimmed)) {
+    return 'Токен содержит недопустимые символы'
   }
+  return null
 }
 
 export default function TokenSetup() {
+  const { token, hasToken, setToken, deleteToken } = useAuth()
   const [clientId, setClientId] = useState('')
-  const [token, setTokenInput] = useState(getToken())
+  const [tokenInput, setTokenInput] = useState(token ?? '')
   const [showToken, setShowToken] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const authUrl = `https://oauth.yandex.ru/authorize?response_type=token&client_id=${encodeURIComponent(clientId || 'your_client_id')}`
 
@@ -27,23 +37,44 @@ export default function TokenSetup() {
     }
   }, [authUrl])
 
-  const handleSave = () => {
-    setToken(token)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+  const handleSave = async () => {
+    const validationError = isValidTokenFormat(tokenInput)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
+    setError(null)
+    setSaving(true)
+    try {
+      await setToken(tokenInput)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    await deleteToken()
+    setTokenInput('')
+    setError(null)
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 mb-6">
-        <Key className="w-6 h-6 text-yandex-yellow" />
+        <Key className="w-6 h-6 text-yandex-yellow" aria-hidden="true" />
         <h2 className="text-2xl font-bold">Настройка OAuth-токена</h2>
       </div>
 
-      <div className="bg-yandex-card rounded-xl p-6 border border-yandex-border space-y-4">
+      <Card className="p-6 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Client ID приложения</label>
+          <label htmlFor="client-id" className="block text-sm font-medium text-gray-400 mb-2">
+            Client ID приложения
+          </label>
           <input
+            id="client-id"
             type="text"
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
@@ -55,9 +86,9 @@ export default function TokenSetup() {
         <div className="flex gap-3">
           <button
             onClick={openAuth}
-            className="flex items-center gap-2 px-4 py-2 bg-yandex-yellow text-black rounded-lg font-medium hover:brightness-110 transition"
+            className="flex items-center gap-2 px-4 py-2 bg-yandex-yellow text-black rounded-lg font-medium hover:brightness-110 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yandex-yellow/50"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-4 h-4" aria-hidden="true" />
             Открыть страницу авторизации
           </button>
         </div>
@@ -71,40 +102,63 @@ export default function TokenSetup() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">OAuth-токен</label>
+          <label htmlFor="oauth-token" className="block text-sm font-medium text-gray-400 mb-2">
+            OAuth-токен
+          </label>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <input
+                id="oauth-token"
                 type={showToken ? 'text' : 'password'}
-                value={token}
+                value={tokenInput}
                 onChange={(e) => {
                   setTokenInput(e.target.value)
                   setSaved(false)
+                  if (error) setError(null)
                 }}
                 placeholder="Вставьте токен сюда"
                 className="w-full bg-yandex-dark border border-yandex-border rounded-lg px-4 py-2 pr-10 text-white placeholder-gray-600 focus:outline-none focus:border-yandex-yellow"
+                aria-invalid={error ? 'true' : 'false'}
+                aria-describedby={error ? 'token-error' : undefined}
               />
               <button
                 onClick={() => setShowToken(!showToken)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yandex-yellow/50 rounded p-1"
+                aria-label={showToken ? 'Скрыть токен' : 'Показать токен'}
+                type="button"
               >
-                {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showToken ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
               </button>
             </div>
-            <button
+            <LoadingButton
               onClick={handleSave}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
-                saved
-                  ? 'bg-green-600 text-white'
-                  : 'bg-yandex-yellow text-black hover:brightness-110'
-              }`}
+              loading={saving}
+              loadingText="Сохранение..."
+              className={saved ? 'bg-green-600 text-white hover:brightness-110' : undefined}
+              aria-label="Сохранить токен"
             >
-              {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+              {saved ? <Check className="w-4 h-4" aria-hidden="true" /> : null}
               {saved ? 'Сохранено' : 'Сохранить'}
-            </button>
+            </LoadingButton>
+            {hasToken && (
+              <button
+                onClick={handleDelete}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600/20 text-red-300 border border-red-700 rounded-lg font-medium hover:bg-red-600/30 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+                aria-label="Удалить сохранённый токен"
+                type="button"
+              >
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
+                Удалить
+              </button>
+            )}
           </div>
+          {error && (
+            <div id="token-error" className="mt-2">
+              <ErrorAlert message={error} />
+            </div>
+          )}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

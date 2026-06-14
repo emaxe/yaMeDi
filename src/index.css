@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 body {
-  @apply bg-yandex-dark text-white antialiased;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  @apply bg-background text-on-background antialiased;
+  font-family: ui-sans-serif, system-ui, sans-serif;
 }
 
 ::-webkit-scrollbar {
@@ -13,14 +13,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1a2e;
+  background: #e3e0dd;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #0f3460;
+  background: #d1d5dc;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #16213e;
+  background: #b9b3ac;
 }

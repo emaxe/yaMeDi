@@ -2,7 +2,9 @@ import http from 'node:http'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, safeStorage, session, shell } from 'electron'
+import Store from 'electron-store'
+import { autoUpdater } from 'electron-updater'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -11,7 +13,55 @@ process.env.VITE_PUBLIC = app.isPackaged
   ? process.env.DIST
   : path.join(process.env.DIST, '../public')
 
-let win: BrowserWindow | null
+interface SecureStoreSchema {
+  encryptedToken?: string
+}
+
+const secureStore = new Store<SecureStoreSchema>({ name: 'yandex-metrics-auth' })
+
+const TRUSTED_EXTERNAL_DOMAINS = new Set([
+  'oauth.yandex.ru',
+  'login.yandex.ru',
+  'api-metrika.yandex.net',
+  'api.direct.yandex.com',
+  'api-sandbox.direct.yandex.com',
+])
+
+const CSP_VALUE = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "connect-src 'self' https://oauth.yandex.ru https://login.yandex.ru https://api-metrika.yandex.net https://api.direct.yandex.com https://api-sandbox.direct.yandex.com ws://localhost:* ws://127.0.0.1:* wss://localhost:* wss://127.0.0.1:*",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join('; ')
+
+function isTrustedExternalUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString)
+    if (url.protocol !== 'https:') return false
+    return TRUSTED_EXTERNAL_DOMAINS.has(url.hostname)
+  } catch {
+    return false
+  }
+}
+
+function isAllowedNavigationUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString)
+    if (url.protocol === 'file:') return true
+    if (url.protocol === 'http:' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1')) {
+      return true
+    }
+    return false
+  } catch {
+    return false
+  }
+}
 
 function checkDevServer(url: string): Promise<boolean> {
   return new Promise((resolve) => {
@@ -28,7 +78,7 @@ function checkDevServer(url: string): Promise<boolean> {
 
 async function createWindow() {
   console.log('[electron] Creating window...')
-  win = new BrowserWindow({
+  const win = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 1024,
@@ -38,6 +88,7 @@ async function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
+      webSecurity: true,
     },
   })
 
@@ -48,6 +99,24 @@ async function createWindow() {
 
   win.webContents.on('did-fail-load', (_, errorCode, errorDescription) => {
     console.error('[electron] Failed to load:', errorCode, errorDescription)
+  })
+
+  win.webContents.on('will-navigate', (event, url) => {
+    if (!isAllowedNavigationUrl(url)) {
+      console.warn('[electron] Blocked navigation to:', url)
+      event.preventDefault()
+    }
+  })
+
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (isTrustedExternalUrl(url)) {
+      shell.openExternal(url).catch((err) => {
+        console.error('[electron] Failed to open external URL:', err)
+      })
+    } else {
+      console.warn('[electron] Blocked new window for:', url)
+    }
+    return { action: 'deny' }
   })
 
   const devUrl = process.env.VITE_DEV_SERVER_URL
@@ -82,7 +151,6 @@ async function createWindow() {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
-    win = null
   }
 })
 
@@ -92,13 +160,75 @@ app.on('activate', () => {
   }
 })
 
+function encryptToken(token: string): string {
+  if (!safeStorage.isEncryptionAvailable()) {
+    throw new Error('Шифрование безопасного хранилища недоступно')
+  }
+  return safeStorage.encryptString(token).toString('base64')
+}
+
+function decryptToken(encrypted: string): string {
+  if (!safeStorage.isEncryptionAvailable()) {
+    throw new Error('Шифрование безопасного хранилища недоступно')
+  }
+  return safeStorage.decryptString(Buffer.from(encrypted, 'base64'))
+}
+
 ipcMain.handle('open-external', async (_, url: string) => {
+  if (!isTrustedExternalUrl(url)) {
+    throw new Error(`Blocked: ${url} is not a trusted external URL`)
+  }
   await shell.openExternal(url)
 })
 
+ipcMain.handle('secure-store:get-token', () => {
+  const encrypted = secureStore.get('encryptedToken')
+  if (!encrypted) return null
+  try {
+    return decryptToken(encrypted)
+  } catch (err) {
+    console.error('[secure-store] Failed to decrypt token:', err)
+    secureStore.delete('encryptedToken')
+    return null
+  }
+})
+
+ipcMain.handle('secure-store:set-token', (_, token: string) => {
+  secureStore.set('encryptedToken', encryptToken(token))
+})
+
+ipcMain.handle('secure-store:delete-token', () => {
+  secureStore.delete('encryptedToken')
+})
+
+process.on('uncaughtException', (err) => {
+  console.error('[electron] Uncaught exception:', err)
+  app.quit()
+})
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[electron] Unhandled rejection:', reason)
+  app.quit()
+})
+
 app.whenReady().then(() => {
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [CSP_VALUE],
+      },
+    })
+  })
+
   console.log('[electron] App ready, platform:', process.platform)
   createWindow().catch((err) => {
     console.error('[electron] Failed to create window:', err)
   })
+
+  if (app.isPackaged) {
+    autoUpdater
+      .checkForUpdatesAndNotify()
+      .catch((err) => console.error('[autoUpdater] Failed to check for updates:', err))
+  }
 })

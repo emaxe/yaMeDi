@@ -5,14 +5,24 @@ import renderer from 'vite-plugin-electron-renderer'
 
 export default defineConfig({
   build: {
-    chunkSizeWarningLimit: 700,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          recharts: ['recharts'],
+          'date-fns': ['date-fns'],
+        },
+      },
+    },
   },
   plugins: [
     react(),
     electron([
       {
         entry: 'electron/main.ts',
-        onstart: (options) => options.startup(),
+        onstart: (options) => {
+          void options.startup()
+        },
         vite: {
           build: {
             sourcemap: true,
@@ -21,8 +31,8 @@ export default defineConfig({
             rollupOptions: {
               external: ['electron'],
               output: {
-                entryFileNames: '[name].cjs',
-                format: 'cjs',
+                entryFileNames: '[name].mjs',
+                format: 'es',
               },
             },
           },
@@ -30,7 +40,9 @@ export default defineConfig({
       },
       {
         entry: 'electron/preload.ts',
-        onstart: (options) => options.reload(),
+        onstart: (options) => {
+          void options.reload()
+        },
         vite: {
           build: {
             sourcemap: true,
