@@ -8,7 +8,7 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        'w-64 shrink-0 flex flex-col',
+        'hidden lg:flex w-64 shrink-0 flex-col',
         'bg-shell-base/70 backdrop-blur-shell border-r border-white/10',
       )}
     >

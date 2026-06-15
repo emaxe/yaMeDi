@@ -3,6 +3,8 @@ import { Suspense, lazy, useEffect } from 'react'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ShellHeader } from './components/ShellHeader'
 import Sidebar from './components/Sidebar'
+import { MobileBottomNav } from './components/mobile/MobileBottomNav'
+import { MobileDrawer } from './components/mobile/MobileDrawer'
 import { SkeletonCard } from './components/ui/Skeleton'
 import { useApp } from './hooks/useApp'
 
@@ -44,7 +46,7 @@ export default function App() {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-y-auto bg-background">
-          <div className="max-w-container mx-auto px-8 py-6">
+          <div className="max-w-container mx-auto px-4 py-4 sm:px-6 lg:px-8 lg:py-6 pb-20 lg:pb-6">
             <ErrorBoundary>
               {activeTab === 'token' && (
                 <Suspense fallback={<TabLoader />}>
@@ -88,6 +90,8 @@ export default function App() {
           </div>
         </main>
       </div>
+      <MobileBottomNav />
+      <MobileDrawer />
     </div>
   )
 }
