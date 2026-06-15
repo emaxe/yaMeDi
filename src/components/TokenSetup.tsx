@@ -83,11 +83,11 @@ export default function TokenSetup() {
           />
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             type="button"
             onClick={openAuth}
-            className="inline-flex items-center gap-2 h-10 px-4 bg-primary text-on-primary rounded-sm text-label-md hover:bg-primary-strong transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus"
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-primary text-on-primary rounded-sm text-label-md hover:bg-primary-strong transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus w-full sm:w-auto"
           >
             <ExternalLink className="w-4 h-4" aria-hidden="true" />
             Открыть страницу авторизации
@@ -106,7 +106,7 @@ export default function TokenSetup() {
           <label htmlFor="oauth-token" className="block text-label-sm text-on-surface-muted mb-2">
             OAuth-токен
           </label>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <input
                 id="oauth-token"
@@ -135,7 +135,7 @@ export default function TokenSetup() {
               onClick={handleSave}
               loading={saving}
               loadingText="Сохранение..."
-              className={saved ? 'bg-success hover:bg-success/90' : undefined}
+              className={saved ? 'bg-success hover:bg-success/90 w-full sm:w-auto' : 'w-full sm:w-auto'}
               aria-label="Сохранить токен"
             >
               {saved ? <Check className="w-4 h-4" aria-hidden="true" /> : null}
@@ -144,7 +144,7 @@ export default function TokenSetup() {
             {hasToken && (
               <button
                 onClick={handleDelete}
-                className="inline-flex items-center gap-2 h-10 px-4 bg-danger/10 text-danger border border-danger/20 rounded-sm text-label-md hover:bg-danger/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus"
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-danger/10 text-danger border border-danger/20 rounded-sm text-label-md hover:bg-danger/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus w-full sm:w-auto"
                 aria-label="Удалить сохранённый токен"
                 type="button"
               >

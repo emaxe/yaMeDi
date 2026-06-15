@@ -13,7 +13,7 @@ export function DiagnosticsScopesCheck({ metrica, directFull, directRead }: Scop
     <Card className="p-6">
       <h3 className="text-title-md text-on-background mb-4">Проверка прав доступа</h3>
       <div className="space-y-3">
-        <div className="flex items-center justify-between py-2 border-b border-outline">
+        <div className="flex flex-wrap items-center justify-between gap-2 py-2 border-b border-outline">
           <span className="text-body-md font-medium text-on-surface">Метрика (metrika:read)</span>
           {metrica ? (
             <span className="flex items-center gap-2 text-body-md text-success">
@@ -27,7 +27,7 @@ export function DiagnosticsScopesCheck({ metrica, directFull, directRead }: Scop
             </span>
           )}
         </div>
-        <div className="flex items-center justify-between py-2 border-b border-outline">
+        <div className="flex flex-wrap items-center justify-between gap-2 py-2 border-b border-outline">
           <span className="text-body-md font-medium text-on-surface">Директ (direct:api)</span>
           {directFull ? (
             <span className="flex items-center gap-2 text-body-md text-success">
@@ -46,7 +46,7 @@ export function DiagnosticsScopesCheck({ metrica, directFull, directRead }: Scop
             </span>
           )}
         </div>
-        <div className="flex items-center justify-between py-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 py-2">
           <span className="text-body-md font-medium text-on-surface">Директ отчёты (direct:api:read)</span>
           {directRead ? (
             <span className="flex items-center gap-2 text-body-md text-success">

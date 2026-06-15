@@ -23,7 +23,7 @@ export default function CountersList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <BarChart3 className="w-6 h-6 text-primary" aria-hidden="true" />
           <h2 className="text-headline-lg text-on-background">Счётчики Метрики</h2>
@@ -32,6 +32,7 @@ export default function CountersList() {
           onClick={() => refetch()}
           loading={isLoading}
           loadingText="Загрузка..."
+          className="w-full sm:w-auto"
         >
           {isSuccess ? 'Обновить' : 'Загрузить'}
         </LoadingButton>
@@ -54,7 +55,7 @@ export default function CountersList() {
         </div>
       )}
 
-      <div className="grid gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
         {counters?.map((c) => (
           <button
             key={c.id}
@@ -66,14 +67,14 @@ export default function CountersList() {
             }`}
             aria-label={`Выбрать счётчик ${c.name}`}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="space-y-1">
                 <div className="text-body-md font-semibold text-on-background">{c.name}</div>
                 <div className="text-body-sm text-on-surface-muted">
                   ID: {c.id} · {c.site} · {c.status}
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-on-surface-muted" aria-hidden="true" />
+              <ChevronRight className="w-5 h-5 text-on-surface-muted sm:shrink-0" aria-hidden="true" />
             </div>
           </button>
         ))}

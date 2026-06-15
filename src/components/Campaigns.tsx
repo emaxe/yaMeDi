@@ -40,16 +40,16 @@ export default function Campaigns() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <Target className="w-6 h-6 text-primary" aria-hidden="true" />
           <h2 className="text-headline-lg text-on-background">Кампании Директа</h2>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <button
             type="button"
             onClick={() => setSandbox(!sandbox)}
-            className={`inline-flex items-center gap-2 h-9 px-3 rounded-sm text-label-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus ${
+            className={`inline-flex items-center justify-center gap-2 h-9 px-3 rounded-sm text-label-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus ${
               sandbox
                 ? 'bg-warning/10 text-warning border border-warning/20'
                 : 'bg-surface-elevated border border-outline text-on-surface-muted hover:text-on-surface'
@@ -64,6 +64,7 @@ export default function Campaigns() {
             onClick={() => refetch()}
             loading={isLoading}
             loadingText="Загрузка..."
+            className="w-full sm:w-auto"
           >
             {isSuccess ? 'Обновить' : 'Загрузить'}
           </LoadingButton>
@@ -90,14 +91,14 @@ export default function Campaigns() {
       <div className="grid gap-3">
         {campaigns?.map((c) => (
           <Card key={c.Id} className="p-4 hover:border-primary transition-colors">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="space-y-1">
                 <div className="text-body-md font-semibold text-on-background">{c.Name}</div>
                 <div className="text-body-sm text-on-surface-muted">
                   ID: {c.Id} · Тип: {c.Type} · Валюта: {c.Currency}
                 </div>
               </div>
-              <div className="text-right space-y-1">
+              <div className="text-left sm:text-right space-y-1">
                 <StatusBadge variant={campaignStatusVariant(c.Status)}>{c.Status}</StatusBadge>
                 <div className="text-body-sm text-on-surface-muted">{c.State}</div>
               </div>
