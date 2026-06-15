@@ -5,6 +5,7 @@ import { AppContext, type AppProviderProps } from './app'
 export function AppProvider({ children }: AppProviderProps) {
   const [activeTab, setActiveTab] = useState('token')
   const [selectedCounter, setSelectedCounter] = useState<import('../types').Counter | null>(null)
+  const [isDrawerOpen, setDrawerOpen] = useState(false)
 
   const selectCounter = useCallback((counter: import('../types').Counter) => {
     setSelectedCounter(counter)
@@ -19,6 +20,8 @@ export function AppProvider({ children }: AppProviderProps) {
         selectedCounter,
         setSelectedCounter,
         selectCounter,
+        isDrawerOpen,
+        setDrawerOpen,
       }}
     >
       {children}
