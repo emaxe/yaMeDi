@@ -56,7 +56,7 @@ export default function MetricsDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <LineChartIcon className="w-6 h-6 text-primary" aria-hidden="true" />
           <div>
@@ -66,13 +66,14 @@ export default function MetricsDashboard() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <DateRangePicker value={dates} onChange={setDates} />
           <LoadingButton
             onClick={refetchAll}
             loading={false}
             loadingText="Загрузка..."
             disabled={!datesValid}
+            className="w-full sm:w-auto"
           >
             <RefreshCw className="w-4 h-4" aria-hidden="true" />
             Загрузить

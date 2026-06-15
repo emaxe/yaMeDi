@@ -52,21 +52,21 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <Card
-          className={`flex items-center gap-2 px-3 py-2 ${error ? 'border-danger ring-1 ring-danger/30' : ''}`}
+          className={`flex flex-1 items-center gap-2 px-3 py-2 ${error ? 'border-danger ring-1 ring-danger/30' : ''}`}
         >
-          <Calendar className="w-4 h-4 text-on-surface-muted" aria-hidden="true" />
+          <Calendar className="w-4 h-4 text-on-surface-muted shrink-0" aria-hidden="true" />
           <input
             type="date"
             value={value.from}
             max={value.to || undefined}
             onChange={(e) => onChange({ ...value, from: e.target.value })}
-            className="bg-transparent text-body-sm text-on-surface outline-none"
+            className="bg-transparent text-body-sm text-on-surface outline-none w-full min-w-0"
             aria-label="Начало периода"
             aria-invalid={error ? 'true' : 'false'}
           />
-          <span className="text-on-surface-muted" aria-hidden="true">
+          <span className="text-on-surface-muted shrink-0" aria-hidden="true">
             —
           </span>
           <input
@@ -74,7 +74,7 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
             value={value.to}
             min={value.from || undefined}
             onChange={(e) => onChange({ ...value, to: e.target.value })}
-            className="bg-transparent text-body-sm text-on-surface outline-none"
+            className="bg-transparent text-body-sm text-on-surface outline-none w-full min-w-0"
             aria-label="Конец периода"
             aria-invalid={error ? 'true' : 'false'}
           />
@@ -83,7 +83,7 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
         <div className="relative">
           <button
             onClick={() => setIsOpen((prev) => !prev)}
-            className="inline-flex items-center gap-2 h-10 px-3 rounded-lg bg-surface-elevated border border-outline text-body-sm text-on-surface hover:bg-surface-soft transition"
+            className="inline-flex items-center justify-center gap-2 h-10 px-3 rounded-lg bg-surface-elevated border border-outline text-body-sm text-on-surface hover:bg-surface-soft transition w-full sm:w-auto"
             type="button"
           >
             <span>{activePreset?.label ?? 'Произвольный'}</span>
