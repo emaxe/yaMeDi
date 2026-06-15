@@ -1,15 +1,6 @@
-import { Activity, BarChart3, Key, LineChart, Target } from 'lucide-react'
-
 import { useApp } from '../hooks/useApp'
+import { navigationItems } from '../lib/navigation'
 import { cn } from '../lib/utils'
-
-const items = [
-  { id: 'token', label: 'Токен', icon: Key },
-  { id: 'diagnostics', label: 'Диагностика', icon: Activity },
-  { id: 'counters', label: 'Счётчики', icon: BarChart3 },
-  { id: 'metrics', label: 'Графики', icon: LineChart, requiresCounter: true },
-  { id: 'campaigns', label: 'Кампании', icon: Target },
-]
 
 export default function Sidebar() {
   const { activeTab, setActiveTab, selectedCounter } = useApp()
@@ -26,7 +17,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 p-3 space-y-1" aria-label="Основная навигация">
-        {items.map((item) => {
+        {navigationItems.map((item) => {
           const Icon = item.icon
           const disabled = item.requiresCounter && !selectedCounter
           const isActive = activeTab === item.id
