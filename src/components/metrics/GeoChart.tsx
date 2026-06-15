@@ -7,6 +7,7 @@ import { exportToCsv } from '../../lib/csvExport'
 import { formatMetricValue, getMetricName } from '../../lib/metrics'
 import { DashboardWidget } from '../ui/DashboardWidget'
 import { DataTable } from '../ui/DataTable'
+import { MobileListCard } from '../mobile/MobileListCard'
 
 interface GeoChartProps {
   counterId: number
@@ -70,7 +71,18 @@ export function GeoChart({ counterId, dateFrom, dateTo }: GeoChartProps) {
           </BarChart>
         </ResponsiveContainer>
 
-        <DataTable
+        <div className="hidden md:block">
+          <DataTable
+            columns={[
+              { key: 'name', label: 'Регион', align: 'left' },
+              { key: 'ym:s:visits', label: getMetricName('ym:s:visits'), align: 'right', sortable: true },
+              { key: 'ym:s:users', label: getMetricName('ym:s:users'), align: 'right', sortable: true },
+            ]}
+            rows={currentData}
+            maxRows={10}
+          />
+        </div>
+        <MobileListCard
           columns={[
             { key: 'name', label: 'Регион', align: 'left' },
             { key: 'ym:s:visits', label: getMetricName('ym:s:visits'), align: 'right', sortable: true },

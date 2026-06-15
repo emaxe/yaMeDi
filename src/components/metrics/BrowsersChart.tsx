@@ -7,6 +7,7 @@ import { exportToCsv } from '../../lib/csvExport'
 import { getMetricName } from '../../lib/metrics'
 import { DashboardWidget } from '../ui/DashboardWidget'
 import { DataTable } from '../ui/DataTable'
+import { MobileListCard } from '../mobile/MobileListCard'
 
 interface BrowsersChartProps {
   counterId: number
@@ -67,7 +68,7 @@ export function BrowsersChart({ counterId, dateFrom, dateTo }: BrowsersChartProp
             <Tooltip contentStyle={tooltipStyle} itemStyle={labelStyle} />
           </PieChart>
         </ResponsiveContainer>
-        <div className="flex items-center">
+        <div className="hidden md:flex items-center">
           <DataTable
             columns={[
               { key: 'name', label: 'Браузер', align: 'left' },
@@ -78,6 +79,15 @@ export function BrowsersChart({ counterId, dateFrom, dateTo }: BrowsersChartProp
             maxRows={8}
           />
         </div>
+        <MobileListCard
+          columns={[
+            { key: 'name', label: 'Браузер', align: 'left' },
+            { key: 'ym:s:visits', label: getMetricName('ym:s:visits'), align: 'right', sortable: true },
+            { key: 'ym:s:users', label: getMetricName('ym:s:users'), align: 'right', sortable: true },
+          ]}
+          rows={data}
+          maxRows={8}
+        />
       </div>
     </DashboardWidget>
   )

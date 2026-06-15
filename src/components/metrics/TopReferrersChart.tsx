@@ -4,6 +4,7 @@ import { exportToCsv } from '../../lib/csvExport'
 import { getMetricName } from '../../lib/metrics'
 import { DashboardWidget } from '../ui/DashboardWidget'
 import { DataTable } from '../ui/DataTable'
+import { MobileListCard } from '../mobile/MobileListCard'
 
 interface TopReferrersChartProps {
   counterId: number
@@ -43,7 +44,18 @@ export function TopReferrersChart({ counterId, dateFrom, dateTo }: TopReferrersC
       onRetry={() => current.refetch()}
       onExport={handleExport}
     >
-      <DataTable
+      <div className="hidden md:block">
+        <DataTable
+          columns={[
+            { key: 'name', label: 'Реферер', align: 'left' },
+            { key: 'ym:s:visits', label: getMetricName('ym:s:visits'), align: 'right', sortable: true },
+            { key: 'ym:s:users', label: getMetricName('ym:s:users'), align: 'right', sortable: true },
+          ]}
+          rows={data}
+          maxRows={20}
+        />
+      </div>
+      <MobileListCard
         columns={[
           { key: 'name', label: 'Реферер', align: 'left' },
           { key: 'ym:s:visits', label: getMetricName('ym:s:visits'), align: 'right', sortable: true },

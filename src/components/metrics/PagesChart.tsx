@@ -4,6 +4,7 @@ import { exportToCsv } from '../../lib/csvExport'
 import { getMetricName } from '../../lib/metrics'
 import { DashboardWidget } from '../ui/DashboardWidget'
 import { DataTable } from '../ui/DataTable'
+import { MobileListCard } from '../mobile/MobileListCard'
 
 interface PagesChartProps {
   counterId: number
@@ -43,7 +44,18 @@ export function PagesChart({ counterId, dateFrom, dateTo }: PagesChartProps) {
       onRetry={() => current.refetch()}
       onExport={handleExport}
     >
-      <DataTable
+      <div className="hidden md:block">
+        <DataTable
+          columns={[
+            { key: 'name', label: 'Страница', align: 'left' },
+            { key: 'ym:pv:pageviews', label: getMetricName('ym:pv:pageviews'), align: 'right', sortable: true },
+            { key: 'ym:pv:users', label: getMetricName('ym:pv:users'), align: 'right', sortable: true },
+          ]}
+          rows={data}
+          maxRows={20}
+        />
+      </div>
+      <MobileListCard
         columns={[
           { key: 'name', label: 'Страница', align: 'left' },
           { key: 'ym:pv:pageviews', label: getMetricName('ym:pv:pageviews'), align: 'right', sortable: true },
