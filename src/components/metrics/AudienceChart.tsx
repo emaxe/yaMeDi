@@ -7,6 +7,7 @@ import { exportToCsv } from '../../lib/csvExport'
 import { formatMetricValue } from '../../lib/metrics'
 import { type ChartDataPoint } from '../../types'
 import { DashboardWidget } from '../ui/DashboardWidget'
+import { MobileChartContainer } from '../mobile/MobileChartContainer'
 
 interface AudienceChartProps {
   counterId: number
@@ -58,36 +59,38 @@ export function AudienceChart({ counterId, dateFrom, dateTo }: AudienceChartProp
       onRetry={() => current.refetch()}
       onExport={handleExport}
     >
-      <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={data}>
-          <CartesianGrid {...gridStyle} />
-          <XAxis dataKey="date" {...axisStroke} tick={tickStyle} />
-          <YAxis {...axisStroke} tick={tickStyle} />
-          <Tooltip
-            contentStyle={tooltipStyle}
-            labelStyle={labelStyle}
-            itemStyle={labelStyle}
-            formatter={(value: number) => formatMetricValue(value)}
-          />
-          <Legend />
-          <Area
-            type="monotone"
-            dataKey={NEW_USERS_KEY}
-            stackId="1"
-            stroke={CHART_COLORS.primary}
-            fill={CHART_COLORS.primarySoft}
-            name="Новые пользователи"
-          />
-          <Area
-            type="monotone"
-            dataKey={RETURNING_USERS_KEY}
-            stackId="1"
-            stroke={CHART_COLORS.secondary}
-            fill={CHART_COLORS.secondarySoft}
-            name="Вернувшиеся пользователи"
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+      <MobileChartContainer>
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data}>
+            <CartesianGrid {...gridStyle} />
+            <XAxis dataKey="date" {...axisStroke} tick={tickStyle} />
+            <YAxis {...axisStroke} tick={tickStyle} />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              labelStyle={labelStyle}
+              itemStyle={labelStyle}
+              formatter={(value: number) => formatMetricValue(value)}
+            />
+            <Legend />
+            <Area
+              type="monotone"
+              dataKey={NEW_USERS_KEY}
+              stackId="1"
+              stroke={CHART_COLORS.primary}
+              fill={CHART_COLORS.primarySoft}
+              name="Новые пользователи"
+            />
+            <Area
+              type="monotone"
+              dataKey={RETURNING_USERS_KEY}
+              stackId="1"
+              stroke={CHART_COLORS.secondary}
+              fill={CHART_COLORS.secondarySoft}
+              name="Вернувшиеся пользователи"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </MobileChartContainer>
     </DashboardWidget>
   )
 }

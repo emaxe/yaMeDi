@@ -6,6 +6,8 @@ import { CHART_COLORS, gridStyle, labelStyle, tooltipStyle, axisStroke, tickStyl
 import { exportToCsv } from '../../lib/csvExport'
 import { formatMetricValue, getMetricName } from '../../lib/metrics'
 import { DashboardWidget } from '../ui/DashboardWidget'
+import { MobileChartContainer } from '../mobile/MobileChartContainer'
+import { useIsMobile } from '../../hooks/useMediaQuery'
 
 interface SourcesChartProps {
   counterId: number
@@ -28,6 +30,7 @@ export function SourcesChart({ counterId, dateFrom, dateTo }: SourcesChartProps)
   const currentData = transformMetricaData(current.data, 'name').slice(0, 10)
   const previousData = transformMetricaData(previous.data, 'name').slice(0, 10)
   const data = buildComparisonData(currentData, previousData, 'name', METRICS)
+  const isMobile = useIsMobile()
 
   function handleExport() {
     if (!currentData.length) return
@@ -47,38 +50,47 @@ export function SourcesChart({ counterId, dateFrom, dateTo }: SourcesChartProps)
       onRetry={() => current.refetch()}
       onExport={handleExport}
     >
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid {...gridStyle} />
-          <XAxis dataKey="name" {...axisStroke} tick={tickStyle} angle={-45} textAnchor="end" height={80} />
-          <YAxis {...axisStroke} tick={tickStyle} />
-          <Tooltip
-            contentStyle={tooltipStyle}
-            labelStyle={labelStyle}
-            itemStyle={labelStyle}
-            formatter={(value: number, name: string) => [formatMetricValue(value), name]}
-          />
-          <Legend />
-          {METRICS.map((metric, index) => (
-            <Bar
-              key={metric}
-              dataKey={metric}
-              fill={COLORS[index]}
-              name={getMetricName(metric)}
-              radius={[4, 4, 0, 0]}
+      <MobileChartContainer>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <CartesianGrid {...gridStyle} />
+            <XAxis
+              dataKey="name"
+              {...axisStroke}
+              tick={tickStyle}
+              angle={isMobile ? 0 : -45}
+              textAnchor={isMobile ? 'middle' : 'end'}
+              height={isMobile ? 40 : 80}
             />
-          ))}
-          {METRICS.map((metric, index) => (
-            <Bar
-              key={`prev:${metric}`}
-              dataKey={`prev:${metric}`}
-              fill={PREV_COLORS[index]}
-              name={`${getMetricName(metric)} (прошлый период)`}
-              radius={[4, 4, 0, 0]}
+            <YAxis {...axisStroke} tick={tickStyle} />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              labelStyle={labelStyle}
+              itemStyle={labelStyle}
+              formatter={(value: number, name: string) => [formatMetricValue(value), name]}
             />
-          ))}
-        </BarChart>
-      </ResponsiveContainer>
+            <Legend />
+            {METRICS.map((metric, index) => (
+              <Bar
+                key={metric}
+                dataKey={metric}
+                fill={COLORS[index]}
+                name={getMetricName(metric)}
+                radius={[4, 4, 0, 0]}
+              />
+            ))}
+            {METRICS.map((metric, index) => (
+              <Bar
+                key={`prev:${metric}`}
+                dataKey={`prev:${metric}`}
+                fill={PREV_COLORS[index]}
+                name={`${getMetricName(metric)} (прошлый период)`}
+                radius={[4, 4, 0, 0]}
+              />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </MobileChartContainer>
     </DashboardWidget>
   )
 }

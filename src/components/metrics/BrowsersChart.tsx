@@ -7,6 +7,7 @@ import { exportToCsv } from '../../lib/csvExport'
 import { getMetricName } from '../../lib/metrics'
 import { DashboardWidget } from '../ui/DashboardWidget'
 import { DataTable } from '../ui/DataTable'
+import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { MobileListCard } from '../mobile/MobileListCard'
 
 interface BrowsersChartProps {
@@ -50,24 +51,26 @@ export function BrowsersChart({ counterId, dateFrom, dateTo }: BrowsersChartProp
       onExport={handleExport}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ResponsiveContainer width="100%" height={240}>
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey={METRIC}
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={90}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-            >
-              {data.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip contentStyle={tooltipStyle} itemStyle={labelStyle} />
-          </PieChart>
-        </ResponsiveContainer>
+        <MobileChartContainer>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                dataKey={METRIC}
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius="80%"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {data.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={tooltipStyle} itemStyle={labelStyle} />
+            </PieChart>
+          </ResponsiveContainer>
+        </MobileChartContainer>
         <div className="hidden md:flex items-center">
           <DataTable
             columns={[

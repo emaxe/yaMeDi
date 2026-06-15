@@ -6,6 +6,7 @@ import { PIE_COLORS, tooltipStyle, labelStyle } from '../../lib/chartTheme'
 import { exportToCsv } from '../../lib/csvExport'
 import { formatMetricValue, getMetricName } from '../../lib/metrics'
 import { DashboardWidget } from '../ui/DashboardWidget'
+import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { MetricDelta } from '../ui/MetricDelta'
 
 interface DevicesChartProps {
@@ -49,31 +50,33 @@ export function DevicesChart({ counterId, dateFrom, dateTo }: DevicesChartProps)
       onExport={handleExport}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={currentData}
-              dataKey={METRIC}
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={100}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-            >
-              {currentData.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip contentStyle={tooltipStyle} itemStyle={labelStyle} />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="flex items-center">
+        <MobileChartContainer>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={currentData}
+                dataKey={METRIC}
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius="80%"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {currentData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={tooltipStyle} itemStyle={labelStyle} />
+            </PieChart>
+          </ResponsiveContainer>
+        </MobileChartContainer>
+        <div className="hidden md:flex items-center">
           <div className="space-y-3 w-full">
             {data.map((d, i) => {
               const currentValue = Number(d[METRIC] ?? 0)
               const previousValue = Number(d[`prev:${METRIC}`] ?? 0)
               return (
-                <div key={d.name} className="flex items-center justify-between">
+                <div key={d.name} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
                   <div className="flex items-center gap-2">
                     <div
                       className="w-3 h-3 rounded-full"

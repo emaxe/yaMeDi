@@ -7,6 +7,7 @@ import { exportToCsv } from '../../lib/csvExport'
 import { formatMetricValue, getMetricName } from '../../lib/metrics'
 import { DashboardWidget } from '../ui/DashboardWidget'
 import { DataTable } from '../ui/DataTable'
+import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { MobileListCard } from '../mobile/MobileListCard'
 
 interface GeoChartProps {
@@ -52,24 +53,26 @@ export function GeoChart({ counterId, dateFrom, dateTo }: GeoChartProps) {
       onExport={handleExport}
     >
       <div className="space-y-4">
-        <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={data} layout="vertical">
-            <CartesianGrid {...gridStyle} horizontal={false} />
-            <XAxis type="number" {...axisStroke} tick={tickStyle} />
-            <YAxis dataKey="name" type="category" width={120} {...axisStroke} tick={tickStyle} />
-            <Tooltip
-              contentStyle={tooltipStyle}
-              labelStyle={labelStyle}
-              itemStyle={labelStyle}
-              formatter={(value: number) => formatMetricValue(value)}
-            />
-            <Bar dataKey={METRIC} name={getMetricName(METRIC)} radius={[0, 4, 4, 0]}>
-              {data.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={CHART_COLORS.primarySoft} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        <MobileChartContainer>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} layout="vertical">
+              <CartesianGrid {...gridStyle} horizontal={false} />
+              <XAxis type="number" {...axisStroke} tick={tickStyle} />
+              <YAxis dataKey="name" type="category" width={80} {...axisStroke} tick={tickStyle} />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                labelStyle={labelStyle}
+                itemStyle={labelStyle}
+                formatter={(value: number) => formatMetricValue(value)}
+              />
+              <Bar dataKey={METRIC} name={getMetricName(METRIC)} radius={[0, 4, 4, 0]}>
+                {data.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={CHART_COLORS.primarySoft} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </MobileChartContainer>
 
         <div className="hidden md:block">
           <DataTable

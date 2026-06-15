@@ -7,6 +7,7 @@ import { CHART_COLORS, gridStyle, labelStyle, tooltipStyle, axisStroke, tickStyl
 import { exportToCsv } from '../../lib/csvExport'
 import { getMetricName } from '../../lib/metrics'
 import { DashboardWidget } from '../ui/DashboardWidget'
+import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { MetricDelta } from '../ui/MetricDelta'
 
 interface TrafficChartProps {
@@ -64,39 +65,41 @@ export function TrafficChart({ counterId, dateFrom, dateTo }: TrafficChartProps)
       onRetry={() => current.refetch()}
       onExport={handleExport}
     >
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data}>
-          <CartesianGrid {...gridStyle} />
-          <XAxis dataKey="date" {...axisStroke} tick={tickStyle} />
-          <YAxis {...axisStroke} tick={tickStyle} />
-          <Tooltip contentStyle={tooltipStyle} labelStyle={labelStyle} itemStyle={labelStyle} />
-          <Legend />
-          {METRICS.map((metric, index) => (
-            <Line
-              key={metric}
-              type="monotone"
-              dataKey={metric}
-              stroke={COLORS[index]}
-              name={getMetricName(metric)}
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 4 }}
-            />
-          ))}
-          {METRICS.map((metric, index) => (
-            <Line
-              key={`prev:${metric}`}
-              type="monotone"
-              dataKey={`prev:${metric}`}
-              stroke={previousPeriodColor(COLORS[index])}
-              strokeDasharray="5 5"
-              name={`${getMetricName(metric)} (прошлый период)`}
-              strokeWidth={2}
-              dot={false}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+      <MobileChartContainer>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data}>
+            <CartesianGrid {...gridStyle} />
+            <XAxis dataKey="date" {...axisStroke} tick={tickStyle} />
+            <YAxis {...axisStroke} tick={tickStyle} />
+            <Tooltip contentStyle={tooltipStyle} labelStyle={labelStyle} itemStyle={labelStyle} />
+            <Legend />
+            {METRICS.map((metric, index) => (
+              <Line
+                key={metric}
+                type="monotone"
+                dataKey={metric}
+                stroke={COLORS[index]}
+                name={getMetricName(metric)}
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4 }}
+              />
+            ))}
+            {METRICS.map((metric, index) => (
+              <Line
+                key={`prev:${metric}`}
+                type="monotone"
+                dataKey={`prev:${metric}`}
+                stroke={previousPeriodColor(COLORS[index])}
+                strokeDasharray="5 5"
+                name={`${getMetricName(metric)} (прошлый период)`}
+                strokeWidth={2}
+                dot={false}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </MobileChartContainer>
     </DashboardWidget>
   )
 }
