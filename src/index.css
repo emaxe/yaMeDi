@@ -24,3 +24,19 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #b9b3ac;
 }
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
