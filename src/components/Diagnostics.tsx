@@ -38,7 +38,9 @@ export default function Diagnostics() {
           <DiagnosticsScopesCheck
             metrica={result.metrica}
             directFull={result.directFull}
+            directFullReason={result.directFullReason}
             directRead={result.directRead}
+            directReadReason={result.directReadReason}
           />
         </div>
       )}

@@ -2,9 +2,9 @@ import { getSearchPhrases, useStatsComparison } from '../../api/metrica'
 import { transformMetricaData } from '../../lib/chartData'
 import { exportToCsv } from '../../lib/csvExport'
 import { getMetricName } from '../../lib/metrics'
+import { MobileListCard } from '../mobile/MobileListCard'
 import { DashboardWidget } from '../ui/DashboardWidget'
 import { DataTable } from '../ui/DataTable'
-import { MobileListCard } from '../mobile/MobileListCard'
 
 interface SearchPhrasesChartProps {
   counterId: number

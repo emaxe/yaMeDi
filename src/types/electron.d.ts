@@ -16,6 +16,9 @@ export interface ElectronAPI {
   getToken: () => Promise<string | null>
   setToken: (token: string) => Promise<void>
   deleteToken: () => Promise<void>
+  getClientLogin: () => Promise<string | null>
+  setClientLogin: (clientLogin: string) => Promise<void>
+  deleteClientLogin: () => Promise<void>
   directFetch: (url: string, options: DirectFetchOptions) => Promise<DirectFetchResponse>
 }
 

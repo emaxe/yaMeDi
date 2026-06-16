@@ -3,7 +3,7 @@ import { LineChart as LineChartIcon, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 
 import { useApp } from '../hooks/useApp'
-import { getDefaultDates, isValidDateRange } from '../lib/dateRanges'
+import { isValidDateRange } from '../lib/dateRanges'
 
 import { AudienceChart } from './metrics/AudienceChart'
 import { BrowsersChart } from './metrics/BrowsersChart'
@@ -16,19 +16,18 @@ import { SourcesChart } from './metrics/SourcesChart'
 import { TopReferrersChart } from './metrics/TopReferrersChart'
 import { TotalsSection } from './metrics/TotalsSection'
 import { TrafficChart } from './metrics/TrafficChart'
-import { DateRangePicker, type DateRange } from './ui/DateRangePicker'
+import { DateRangePicker } from './ui/DateRangePicker'
 import { EmptyState } from './ui/EmptyState'
 import { ErrorAlert } from './ui/ErrorAlert'
 import { LoadingButton } from './ui/LoadingButton'
 
 export default function MetricsDashboard() {
-  const { selectedCounter } = useApp()
+  const { selectedCounter, dateRange, setDateRange } = useApp()
   const counterId = selectedCounter?.id
   const queryClient = useQueryClient()
-  const [dates, setDates] = useState<DateRange>(getDefaultDates)
   const [globalError, setGlobalError] = useState<string | null>(null)
 
-  const datesValid = isValidDateRange(dates)
+  const datesValid = isValidDateRange(dateRange)
 
   function refetchAll() {
     if (!counterId || !datesValid) return
@@ -40,6 +39,8 @@ export default function MetricsDashboard() {
       },
     })
   }
+
+  const dates = dateRange
 
   if (!selectedCounter) {
     return (
@@ -67,7 +68,7 @@ export default function MetricsDashboard() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <DateRangePicker value={dates} onChange={setDates} />
+          <DateRangePicker value={dates} onChange={setDateRange} />
           <LoadingButton
             onClick={refetchAll}
             loading={false}

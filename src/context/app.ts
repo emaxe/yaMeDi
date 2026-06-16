@@ -1,6 +1,6 @@
 import { createContext } from 'react'
 
-import type { Counter } from '../types'
+import type { Counter, DateRange } from '../types'
 
 export interface AppState {
   activeTab: string
@@ -8,6 +8,11 @@ export interface AppState {
   selectedCounter: Counter | null
   setSelectedCounter: (counter: Counter | null) => void
   selectCounter: (counter: Counter) => void
+  selectedCampaignId: number | null
+  setSelectedCampaignId: (id: number | null) => void
+  selectCampaign: (id: number) => void
+  dateRange: DateRange
+  setDateRange: (range: DateRange) => void
   isDrawerOpen: boolean
   setDrawerOpen: (open: boolean) => void
 }

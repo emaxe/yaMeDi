@@ -11,8 +11,8 @@ import {
 import { ApiError, fetchJson, fetchText } from './client'
 import { API_CONFIG, API_ENDPOINTS } from './config'
 
-function getDirectHeaders(token: string): Record<string, string> {
-  return {
+function getDirectHeaders(token: string, clientLogin?: string | null): Record<string, string> {
+  const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
     'Content-Type': API_CONFIG.direct.contentType,
     returnMoneyInMicros: 'false',
@@ -20,13 +20,18 @@ function getDirectHeaders(token: string): Record<string, string> {
     skipReportSummary: 'true',
     skipColumnHeader: 'false',
   }
+  if (clientLogin) {
+    headers['Client-Login'] = clientLogin
+  }
+  console.log('[direct] getDirectHeaders', headers)
+  return headers
 }
 
 function getDirectBaseUrl(sandbox: boolean): string {
   return sandbox ? API_CONFIG.direct.sandboxUrl : API_CONFIG.direct.baseUrl
 }
 
-export async function getCampaigns(token: string, sandbox = false): Promise<Campaign[]> {
+export async function getCampaigns(token: string, clientLogin: string | null, sandbox = false): Promise<Campaign[]> {
   const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.campaigns}`
   const body = {
     method: 'get',
@@ -38,7 +43,7 @@ export async function getCampaigns(token: string, sandbox = false): Promise<Camp
 
   const data = await fetchJson<unknown>(
     url,
-    { method: 'POST', headers: getDirectHeaders(token), body },
+    { method: 'POST', headers: getDirectHeaders(token, clientLogin), body },
     'Кампании Директа'
   )
   const parsed = campaignsResponseSchema.parse(data)
@@ -46,10 +51,11 @@ export async function getCampaigns(token: string, sandbox = false): Promise<Camp
 }
 
 export function useCampaigns(sandbox: boolean) {
-  const { token } = useAuth()
+  const { token, clientLogin } = useAuth()
+  console.log('[useCampaigns] token=', token ? 'set' : 'null', 'clientLogin=', clientLogin)
   return useQuery({
-    queryKey: ['campaigns', sandbox],
-    queryFn: () => getCampaigns(token!, sandbox),
+    queryKey: ['campaigns', sandbox, clientLogin],
+    queryFn: () => getCampaigns(token!, clientLogin, sandbox),
     enabled: !!token,
   })
 }
@@ -83,6 +89,7 @@ function assertReportReady(text: string, context: string): string {
 
 export async function getCampaignReport(
   token: string,
+  clientLogin: string | null,
   dateFrom: string,
   dateTo: string,
   sandbox = false
@@ -102,7 +109,7 @@ export async function getCampaignReport(
 
   const text = await fetchText(
     url,
-    { method: 'POST', headers: getDirectHeaders(token), body },
+    { method: 'POST', headers: getDirectHeaders(token, clientLogin), body },
     'Отчёт Директа'
   )
   const ready = assertReportReady(text, 'Отчёт Директа')
@@ -112,6 +119,7 @@ export async function getCampaignReport(
 
 export async function getAdReport(
   token: string,
+  clientLogin: string | null,
   dateFrom: string,
   dateTo: string,
   sandbox = false
@@ -128,12 +136,13 @@ export async function getAdReport(
     },
   }
 
-  const text = await fetchText(url, { method: 'POST', headers: getDirectHeaders(token), body }, 'Отчёт по объявлениям')
+  const text = await fetchText(url, { method: 'POST', headers: getDirectHeaders(token, clientLogin), body }, 'Отчёт по объявлениям')
   return assertReportReady(text, 'Отчёт по объявлениям')
 }
 
 export async function getSearchTermsReport(
   token: string,
+  clientLogin: string | null,
   dateFrom: string,
   dateTo: string,
   sandbox = false
@@ -152,7 +161,7 @@ export async function getSearchTermsReport(
 
   const text = await fetchText(
     url,
-    { method: 'POST', headers: getDirectHeaders(token), body },
+    { method: 'POST', headers: getDirectHeaders(token, clientLogin), body },
     'Отчёт по поисковым запросам'
   )
   return assertReportReady(text, 'Отчёт по поисковым запросам')

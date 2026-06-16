@@ -1,13 +1,13 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 import { getSources, useStatsComparison } from '../../api/metrica'
+import { useIsMobile } from '../../hooks/useMediaQuery'
 import { buildComparisonData, transformMetricaData } from '../../lib/chartData'
-import { CHART_COLORS, gridStyle, labelStyle, tooltipStyle, axisStroke, tickStyle, previousPeriodColor } from '../../lib/chartTheme'
+import { CHART_COLORS, gridStyle, labelStyle, tooltipStyle, axisStroke, tickStyle, previousPeriodColor, legendStyle } from '../../lib/chartTheme'
 import { exportToCsv } from '../../lib/csvExport'
 import { formatMetricValue, getMetricName } from '../../lib/metrics'
-import { DashboardWidget } from '../ui/DashboardWidget'
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
-import { useIsMobile } from '../../hooks/useMediaQuery'
+import { DashboardWidget } from '../ui/DashboardWidget'
 
 interface SourcesChartProps {
   counterId: number
@@ -69,7 +69,7 @@ export function SourcesChart({ counterId, dateFrom, dateTo }: SourcesChartProps)
               itemStyle={labelStyle}
               formatter={(value: number, name: string) => [formatMetricValue(value), name]}
             />
-            <Legend />
+            <Legend {...legendStyle} />
             {METRICS.map((metric, index) => (
               <Bar
                 key={metric}

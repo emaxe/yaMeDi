@@ -12,7 +12,13 @@ const electronAPI: ElectronAPI = {
   getToken: () => ipcRenderer.invoke('secure-store:get-token'),
   setToken: (token) => ipcRenderer.invoke('secure-store:set-token', token),
   deleteToken: () => ipcRenderer.invoke('secure-store:delete-token'),
-  directFetch: (url, options) => ipcRenderer.invoke('direct:fetch', url, options),
+  getClientLogin: () => ipcRenderer.invoke('secure-store:get-client-login'),
+  setClientLogin: (clientLogin) => ipcRenderer.invoke('secure-store:set-client-login', clientLogin),
+  deleteClientLogin: () => ipcRenderer.invoke('secure-store:delete-client-login'),
+  directFetch: (url, options) => {
+    console.log('[preload] directFetch options', options)
+    return ipcRenderer.invoke('direct:fetch', url, options)
+  },
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

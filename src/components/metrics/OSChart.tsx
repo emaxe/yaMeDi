@@ -2,13 +2,13 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 
 import { getOS, useStatsComparison } from '../../api/metrica'
 import { transformMetricaData } from '../../lib/chartData'
-import { PIE_COLORS, tooltipStyle, labelStyle } from '../../lib/chartTheme'
+import { PIE_COLORS, tooltipStyle, labelStyle, pieLabel } from '../../lib/chartTheme'
 import { exportToCsv } from '../../lib/csvExport'
 import { getMetricName } from '../../lib/metrics'
-import { DashboardWidget } from '../ui/DashboardWidget'
-import { DataTable } from '../ui/DataTable'
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { MobileListCard } from '../mobile/MobileListCard'
+import { DashboardWidget } from '../ui/DashboardWidget'
+import { DataTable } from '../ui/DataTable'
 
 interface OSChartProps {
   counterId: number
@@ -61,7 +61,7 @@ export function OSChart({ counterId, dateFrom, dateTo }: OSChartProps) {
                 cx="50%"
                 cy="50%"
                 outerRadius="80%"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={pieLabel}
               >
                 {data.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />

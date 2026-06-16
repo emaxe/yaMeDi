@@ -106,6 +106,8 @@ export interface TokenCheckResult {
   metrica: boolean
   directFull: boolean
   directRead: boolean
+  directFullReason?: string
+  directReadReason?: string
   account?: AccountInfo
 }
 

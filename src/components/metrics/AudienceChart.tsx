@@ -2,12 +2,12 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 
 import { getAudience, useStatsComparison } from '../../api/metrica'
 import { alignByIndex, transformMetricaData } from '../../lib/chartData'
-import { CHART_COLORS, gridStyle, labelStyle, tooltipStyle, axisStroke, tickStyle } from '../../lib/chartTheme'
+import { CHART_COLORS, gridStyle, labelStyle, tooltipStyle, axisStroke, tickStyle, legendStyle } from '../../lib/chartTheme'
 import { exportToCsv } from '../../lib/csvExport'
 import { formatMetricValue } from '../../lib/metrics'
 import { type ChartDataPoint } from '../../types'
-import { DashboardWidget } from '../ui/DashboardWidget'
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
+import { DashboardWidget } from '../ui/DashboardWidget'
 
 interface AudienceChartProps {
   counterId: number
@@ -71,7 +71,7 @@ export function AudienceChart({ counterId, dateFrom, dateTo }: AudienceChartProp
               itemStyle={labelStyle}
               formatter={(value: number) => formatMetricValue(value)}
             />
-            <Legend />
+            <Legend {...legendStyle} />
             <Area
               type="monotone"
               dataKey={NEW_USERS_KEY}

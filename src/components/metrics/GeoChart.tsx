@@ -5,10 +5,10 @@ import { buildComparisonData, transformMetricaData } from '../../lib/chartData'
 import { CHART_COLORS, gridStyle, labelStyle, tooltipStyle, axisStroke, tickStyle } from '../../lib/chartTheme'
 import { exportToCsv } from '../../lib/csvExport'
 import { formatMetricValue, getMetricName } from '../../lib/metrics'
-import { DashboardWidget } from '../ui/DashboardWidget'
-import { DataTable } from '../ui/DataTable'
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { MobileListCard } from '../mobile/MobileListCard'
+import { DashboardWidget } from '../ui/DashboardWidget'
+import { DataTable } from '../ui/DataTable'
 
 interface GeoChartProps {
   counterId: number

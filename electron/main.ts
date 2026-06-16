@@ -16,6 +16,7 @@ process.env.VITE_PUBLIC = app.isPackaged
 
 interface SecureStoreSchema {
   encryptedToken?: string
+  encryptedClientLogin?: string
 }
 
 interface DirectFetchOptions {
@@ -237,8 +238,29 @@ ipcMain.handle('secure-store:delete-token', () => {
   secureStore.delete('encryptedToken')
 })
 
+ipcMain.handle('secure-store:get-client-login', () => {
+  const encrypted = secureStore.get('encryptedClientLogin')
+  if (!encrypted) return null
+  try {
+    return decryptToken(encrypted)
+  } catch (err) {
+    console.error('[secure-store] Failed to decrypt client login:', err)
+    secureStore.delete('encryptedClientLogin')
+    return null
+  }
+})
+
+ipcMain.handle('secure-store:set-client-login', (_, clientLogin: string) => {
+  secureStore.set('encryptedClientLogin', encryptToken(clientLogin))
+})
+
+ipcMain.handle('secure-store:delete-client-login', () => {
+  secureStore.delete('encryptedClientLogin')
+})
+
 ipcMain.handle('direct:fetch', async (_, url: string, options: DirectFetchOptions) => {
   console.log('[direct:fetch] ipc called', url, options.method ?? 'GET')
+  console.log('[direct:fetch] headers', options.headers)
   if (!isTrustedExternalUrl(url)) {
     console.error('[direct:fetch] blocked untrusted URL', url)
     throw new Error(`Blocked direct fetch to untrusted URL: ${url}`)

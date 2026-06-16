@@ -109,6 +109,7 @@ async function performFetch(url: string, options: RequestOptions): Promise<{ sta
 
   if (viaMain) {
     try {
+      console.log('[performFetch] directFetch options', options)
       const result = await electronAPI.directFetch(url, options)
       console.log(`[performFetch] main result status=${result.status} body=${result.body.slice(0, 200)}`)
       return result

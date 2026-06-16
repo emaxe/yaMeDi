@@ -13,6 +13,9 @@ beforeAll(() => {
     getToken: vi.fn(),
     setToken: vi.fn(),
     deleteToken: vi.fn(),
+    getClientLogin: vi.fn(),
+    setClientLogin: vi.fn(),
+    deleteClientLogin: vi.fn(),
     onMainProcessMessage: vi.fn(() => vi.fn()),
     directFetch: vi.fn(),
   }
@@ -34,7 +37,7 @@ describe('TokenSetup', () => {
   it('renders token input and save button', () => {
     renderTokenSetup()
     expect(screen.getByLabelText(/oauth-токен/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /сохранить/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /сохранить токен/i })).toBeInTheDocument()
   })
 
   it('toggles token visibility', async () => {
@@ -55,7 +58,7 @@ describe('TokenSetup', () => {
 
     const input = screen.getByLabelText(/oauth-токен/i)
     await user.type(input, 'my-valid-token-123')
-    await user.click(screen.getByRole('button', { name: /сохранить/i }))
+    await user.click(screen.getByRole('button', { name: /сохранить токен/i }))
 
     expect(setToken).toHaveBeenCalledWith('my-valid-token-123')
   })
@@ -67,7 +70,7 @@ describe('TokenSetup', () => {
 
     const input = screen.getByLabelText(/oauth-токен/i)
     await user.type(input, 'short')
-    await user.click(screen.getByRole('button', { name: /сохранить/i }))
+    await user.click(screen.getByRole('button', { name: /сохранить токен/i }))
 
     expect(screen.getByText(/токен слишком короткий/i)).toBeInTheDocument()
     expect(setToken).not.toHaveBeenCalled()

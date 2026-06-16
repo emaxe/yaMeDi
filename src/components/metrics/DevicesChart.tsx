@@ -2,11 +2,11 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 
 import { getDevices, useStatsComparison } from '../../api/metrica'
 import { buildComparisonData, transformMetricaData } from '../../lib/chartData'
-import { PIE_COLORS, tooltipStyle, labelStyle } from '../../lib/chartTheme'
+import { PIE_COLORS, tooltipStyle, labelStyle, pieLabel } from '../../lib/chartTheme'
 import { exportToCsv } from '../../lib/csvExport'
 import { formatMetricValue, getMetricName } from '../../lib/metrics'
-import { DashboardWidget } from '../ui/DashboardWidget'
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
+import { DashboardWidget } from '../ui/DashboardWidget'
 import { MetricDelta } from '../ui/MetricDelta'
 
 interface DevicesChartProps {
@@ -60,7 +60,7 @@ export function DevicesChart({ counterId, dateFrom, dateTo }: DevicesChartProps)
                 cx="50%"
                 cy="50%"
                 outerRadius="80%"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={pieLabel}
               >
                 {currentData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />

@@ -1,4 +1,4 @@
-import { Activity, BarChart3, Key, LineChart, Target, type LucideIcon } from 'lucide-react'
+import { Activity, BarChart3, Key, LineChart, Target, TrendingUp, type LucideIcon } from 'lucide-react'
 
 export type NavItem = {
   id: string
@@ -12,6 +12,7 @@ export const navigationItems: NavItem[] = [
   { id: 'metrics', label: 'Графики', icon: LineChart, requiresCounter: true, section: 'frequent' },
   { id: 'counters', label: 'Счётчики', icon: BarChart3, section: 'frequent' },
   { id: 'campaigns', label: 'Кампании', icon: Target, section: 'frequent' },
+  { id: 'company-analytics', label: 'Аналитика кампании', icon: TrendingUp, section: 'frequent' },
   { id: 'token', label: 'Токен', icon: Key, section: 'rare' },
   { id: 'diagnostics', label: 'Диагностика', icon: Activity, section: 'rare' },
 ]

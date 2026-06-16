@@ -22,8 +22,8 @@ function getMetricaHeaders(token: string): Record<string, string> {
   }
 }
 
-function getDirectHeaders(token: string): Record<string, string> {
-  return {
+function getDirectHeaders(token: string, clientLogin?: string | null): Record<string, string> {
+  const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
     'Content-Type': API_CONFIG.direct.contentType,
     returnMoneyInMicros: 'false',
@@ -31,6 +31,10 @@ function getDirectHeaders(token: string): Record<string, string> {
     skipReportSummary: 'true',
     skipColumnHeader: 'false',
   }
+  if (clientLogin) {
+    headers['Client-Login'] = clientLogin
+  }
+  return headers
 }
 
 export async function getAccountInfo(token: string): Promise<AccountInfo> {
@@ -63,7 +67,7 @@ export async function checkMetricaScope(token: string): Promise<boolean> {
   }
 }
 
-export async function checkDirectScope(token: string): Promise<{ ok: boolean; reason: string }> {
+export async function checkDirectScope(token: string, clientLogin?: string | null): Promise<{ ok: boolean; reason: string }> {
   const body = {
     method: 'get',
     params: {
@@ -74,7 +78,7 @@ export async function checkDirectScope(token: string): Promise<{ ok: boolean; re
   try {
     const data = await fetchJson<unknown>(
       `${API_CONFIG.direct.baseUrl}/campaigns`,
-      { method: 'POST', headers: getDirectHeaders(token), body, timeout: 10000 },
+      { method: 'POST', headers: getDirectHeaders(token, clientLogin), body, timeout: 10000 },
       'Проверка доступа к Директу'
     )
     const parsed = directApiErrorSchema.parse(data)
@@ -87,7 +91,7 @@ export async function checkDirectScope(token: string): Promise<{ ok: boolean; re
   }
 }
 
-export async function checkDirectReadScope(token: string): Promise<{ ok: boolean; reason: string }> {
+export async function checkDirectReadScope(token: string, clientLogin?: string | null): Promise<{ ok: boolean; reason: string }> {
   const now = new Date()
   const yesterday = new Date(now.getTime() - 86400000)
   const fmt = (d: Date) => d.toISOString().split('T')[0]
@@ -106,7 +110,7 @@ export async function checkDirectReadScope(token: string): Promise<{ ok: boolean
   try {
     const text = await fetchText(
       `${API_CONFIG.direct.baseUrl}/reports`,
-      { method: 'POST', headers: getDirectHeaders(token), body, timeout: 10000 },
+      { method: 'POST', headers: getDirectHeaders(token, clientLogin), body, timeout: 10000 },
       'Проверка доступа к отчётам Директа'
     )
     if (text.includes('Invalid OAuth token')) return { ok: false, reason: 'Invalid OAuth token' }
@@ -117,7 +121,7 @@ export async function checkDirectReadScope(token: string): Promise<{ ok: boolean
   }
 }
 
-export async function runFullDiagnostics(token: string): Promise<TokenCheckResult> {
+export async function runFullDiagnostics(token: string, clientLogin?: string | null): Promise<TokenCheckResult> {
   const info = await getAccountInfo(token)
   if (!info.valid) {
     return { valid: false, metrica: false, directFull: false, directRead: false, account: info }
@@ -125,22 +129,24 @@ export async function runFullDiagnostics(token: string): Promise<TokenCheckResul
 
   const [metrica, direct, directRead] = await Promise.all([
     checkMetricaScope(token),
-    checkDirectScope(token),
-    checkDirectReadScope(token),
+    checkDirectScope(token, clientLogin),
+    checkDirectReadScope(token, clientLogin),
   ])
 
   return {
     valid: true,
     metrica,
     directFull: direct.ok,
+    directFullReason: direct.reason,
     directRead: directRead.ok,
+    directReadReason: directRead.reason,
     account: info,
   }
 }
 
 export function useRunDiagnostics() {
-  const { token } = useAuth()
+  const { token, clientLogin } = useAuth()
   return useMutation({
-    mutationFn: () => runFullDiagnostics(token!),
+    mutationFn: () => runFullDiagnostics(token!, clientLogin),
   })
 }

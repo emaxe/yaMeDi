@@ -35,7 +35,26 @@ export const itemStyle = { color: CHART_COLORS.text }
 export const axisStroke = { stroke: CHART_COLORS.muted }
 export const tickStyle = { fontSize: 12 }
 
+import type { CSSProperties } from 'react'
+
 export const gridStyle = { strokeDasharray: '3 3', stroke: CHART_COLORS.grid }
+
+export const legendStyle = {
+  wrapperStyle: {
+    paddingTop: 12,
+    fontSize: 12,
+    lineHeight: '1.2',
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: '0 16px',
+  } satisfies CSSProperties,
+}
+
+export const pieLabel = ({ percent }: { percent: number }) => {
+  if (percent < 0.05) return null
+  return `${(percent * 100).toFixed(0)}%`
+}
 
 export function previousPeriodColor(baseColor: string): string {
   if (baseColor.startsWith('rgba(')) {

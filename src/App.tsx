@@ -1,10 +1,10 @@
 import { Suspense, lazy, useEffect } from 'react'
 
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { ShellHeader } from './components/ShellHeader'
-import Sidebar from './components/Sidebar'
 import { MobileBottomNav } from './components/mobile/MobileBottomNav'
 import { MobileDrawer } from './components/mobile/MobileDrawer'
+import { ShellHeader } from './components/ShellHeader'
+import Sidebar from './components/Sidebar'
 import { SkeletonCard } from './components/ui/Skeleton'
 import { useApp } from './hooks/useApp'
 
@@ -13,6 +13,7 @@ const Diagnostics = lazy(() => import('./components/Diagnostics'))
 const CountersList = lazy(() => import('./components/CountersList'))
 const MetricsDashboard = lazy(() => import('./components/MetricsDashboard'))
 const Campaigns = lazy(() => import('./components/Campaigns'))
+const CampaignAnalytics = lazy(() => import('./components/CampaignAnalytics'))
 
 function TabLoader() {
   return (
@@ -84,6 +85,13 @@ export default function App() {
               {activeTab === 'campaigns' && (
                 <Suspense fallback={<TabLoader />}>
                   <Campaigns />
+                </Suspense>
+              )}
+            </ErrorBoundary>
+            <ErrorBoundary>
+              {activeTab === 'company-analytics' && (
+                <Suspense fallback={<TabLoader />}>
+                  <CampaignAnalytics />
                 </Suspense>
               )}
             </ErrorBoundary>

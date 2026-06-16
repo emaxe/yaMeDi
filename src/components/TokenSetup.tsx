@@ -19,15 +19,18 @@ function isValidTokenFormat(value: string): string | null {
 }
 
 export default function TokenSetup() {
-  const { token, hasToken, setToken, deleteToken } = useAuth()
+  const { token, hasToken, setToken, deleteToken, clientLogin, setClientLogin, deleteClientLogin } = useAuth()
   const [clientId, setClientId] = useState('')
   const [tokenInput, setTokenInput] = useState(token ?? '')
   const [showToken, setShowToken] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [clientLoginInput, setClientLoginInput] = useState(clientLogin ?? '')
+  const [clientLoginSaved, setClientLoginSaved] = useState(false)
 
-  const authUrl = `https://oauth.yandex.ru/authorize?response_type=token&client_id=${encodeURIComponent(clientId || 'your_client_id')}`
+  const scopes = 'metrika:read direct:api'
+  const authUrl = `https://oauth.yandex.ru/authorize?response_type=token&client_id=${encodeURIComponent(clientId || 'your_client_id')}&scope=${encodeURIComponent(scopes)}`
 
   const openAuth = useCallback(async () => {
     if (window.electronAPI) {
@@ -59,6 +62,18 @@ export default function TokenSetup() {
     await deleteToken()
     setTokenInput('')
     setError(null)
+  }
+
+  const handleSaveClientLogin = async () => {
+    await setClientLogin(clientLoginInput)
+    setClientLoginSaved(true)
+    setTimeout(() => setClientLoginSaved(false), 2000)
+  }
+
+  const handleDeleteClientLogin = async () => {
+    await deleteClientLogin()
+    setClientLoginInput('')
+    setClientLoginSaved(false)
   }
 
   return (
@@ -158,6 +173,51 @@ export default function TokenSetup() {
               <ErrorAlert message={error} />
             </div>
           )}
+        </div>
+
+        <hr className="border-outline" />
+
+        <div>
+          <label htmlFor="client-login" className="block text-label-sm text-on-surface-muted mb-2">
+            Client-Login (для агентств)
+          </label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              id="client-login"
+              type="text"
+              value={clientLoginInput}
+              onChange={(e) => {
+                setClientLoginInput(e.target.value)
+                setClientLoginSaved(false)
+              }}
+              placeholder="Логин рекламного аккаунта (необязательно)"
+              className="w-full h-9 px-3 bg-surface-elevated border border-outline rounded-sm text-body-md text-on-surface placeholder:text-on-surface-muted focus:outline-none focus:border-primary-focus"
+            />
+            <LoadingButton
+              onClick={handleSaveClientLogin}
+              loading={false}
+              loadingText="Сохранение..."
+              className={clientLoginSaved ? 'bg-success hover:bg-success/90 w-full sm:w-auto' : 'w-full sm:w-auto'}
+              aria-label="Сохранить Client-Login"
+            >
+              {clientLoginSaved ? <Check className="w-4 h-4" aria-hidden="true" /> : null}
+              {clientLoginSaved ? 'Сохранено' : 'Сохранить'}
+            </LoadingButton>
+            {clientLogin && (
+              <button
+                onClick={handleDeleteClientLogin}
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-danger/10 text-danger border border-danger/20 rounded-sm text-label-md hover:bg-danger/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus w-full sm:w-auto"
+                aria-label="Удалить сохранённый Client-Login"
+                type="button"
+              >
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
+                Удалить
+              </button>
+            )}
+          </div>
+          <p className="mt-2 text-body-sm text-on-surface-muted">
+            Укажите, если токен выдан для агентского аккаунта и нужно получить данные от имени клиента.
+          </p>
         </div>
       </Card>
     </div>
