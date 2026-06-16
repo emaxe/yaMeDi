@@ -164,7 +164,7 @@ export async function fetchText(url: string, options: RequestOptions = {}, conte
   return executeWithRetry(async () => {
     const { status, body } = await performFetch(url, options)
 
-    if (status < 200 || status >= 300) {
+    if (status < 200 || status >= 300 || status === 202) {
       console.error(`[API error] ${context}: ${status}`, body)
       throw new ApiError(status, context, buildErrorMessage(status, body, context))
     }

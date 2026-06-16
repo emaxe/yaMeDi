@@ -116,6 +116,63 @@ export interface DateRange {
   to: string
 }
 
+export const numericFieldSchema = z
+  .union([z.string(), z.number()])
+  .transform((v) => (typeof v === 'string' ? parseFloat(v) : v))
+
+export interface CampaignPerformanceReportRow {
+  Date: string
+  Impressions: number
+  Clicks: number
+  Cost: number
+  Ctr: number
+  AvgCpc: number
+  Conversions: number
+}
+
+export const campaignPerformanceReportRowSchema = z.object({
+  Date: z.string(),
+  Impressions: numericFieldSchema,
+  Clicks: numericFieldSchema,
+  Cost: numericFieldSchema,
+  Ctr: numericFieldSchema,
+  AvgCpc: numericFieldSchema,
+  Conversions: numericFieldSchema,
+})
+
+export interface AdReportRow {
+  AdName: string
+  Impressions: number
+  Clicks: number
+  Cost: number
+  Ctr: number
+}
+
+export const adReportRowSchema = z.object({
+  AdName: z.string(),
+  Impressions: numericFieldSchema,
+  Clicks: numericFieldSchema,
+  Cost: numericFieldSchema,
+  Ctr: numericFieldSchema,
+})
+
+export interface SearchTermReportRow {
+  SearchTerm: string
+  Impressions: number
+  Clicks: number
+  Cost: number
+  Ctr: number
+}
+
+export const searchTermReportRowSchema = z.object({
+  SearchTerm: z.string(),
+  Impressions: numericFieldSchema,
+  Clicks: numericFieldSchema,
+  Cost: numericFieldSchema,
+  Ctr: numericFieldSchema,
+})
+
+/** @deprecated use campaignPerformanceReportRowSchema */
 export interface DirectReportRow {
   CampaignName: string
   CampaignId: number
@@ -127,15 +184,16 @@ export interface DirectReportRow {
   Conversions: number
 }
 
+/** @deprecated use campaignPerformanceReportRowSchema */
 export const directReportRowSchema = z.object({
   CampaignName: z.string(),
   CampaignId: z.union([z.string(), z.number()]).transform((v) => (typeof v === 'string' ? parseInt(v, 10) : v)),
-  Impressions: z.union([z.string(), z.number()]).transform((v) => (typeof v === 'string' ? parseFloat(v) : v)),
-  Clicks: z.union([z.string(), z.number()]).transform((v) => (typeof v === 'string' ? parseFloat(v) : v)),
-  Cost: z.union([z.string(), z.number()]).transform((v) => (typeof v === 'string' ? parseFloat(v) : v)),
-  Ctr: z.union([z.string(), z.number()]).transform((v) => (typeof v === 'string' ? parseFloat(v) : v)),
-  AvgCpc: z.union([z.string(), z.number()]).transform((v) => (typeof v === 'string' ? parseFloat(v) : v)),
-  Conversions: z.union([z.string(), z.number()]).transform((v) => (typeof v === 'string' ? parseFloat(v) : v)),
+  Impressions: numericFieldSchema,
+  Clicks: numericFieldSchema,
+  Cost: numericFieldSchema,
+  Ctr: numericFieldSchema,
+  AvgCpc: numericFieldSchema,
+  Conversions: numericFieldSchema,
 })
 
 export interface NavItem {

@@ -2,10 +2,14 @@ import { useQuery } from '@tanstack/react-query'
 
 import { useAuth } from '../hooks/useAuth'
 import {
+  adReportRowSchema,
   campaignsResponseSchema,
-  directReportRowSchema,
+  campaignPerformanceReportRowSchema,
+  searchTermReportRowSchema,
+  type AdReportRow,
   type Campaign,
-  type DirectReportRow,
+  type CampaignPerformanceReportRow,
+  type SearchTermReportRow,
 } from '../types'
 
 import { ApiError, fetchJson, fetchText } from './client'
@@ -62,6 +66,8 @@ export function useCampaigns(sandbox: boolean) {
 
 export type TsvValue = string | number
 
+const NUMERIC_TSV_VALUE = /^-?\d+(\.\d+)?$/
+
 export function parseTsv(text: string): Record<string, TsvValue>[] {
   const lines = text.trim().split('\n').filter(Boolean)
   if (lines.length < 2) return []
@@ -72,8 +78,8 @@ export function parseTsv(text: string): Record<string, TsvValue>[] {
     const row: Record<string, TsvValue> = {}
     headers.forEach((h, idx) => {
       const v = vals[idx] ?? ''
-      const num = parseFloat(v)
-      row[h] = Number.isNaN(num) || v === '' ? v : num
+      const num = NUMERIC_TSV_VALUE.test(v) ? parseFloat(v) : Number.NaN
+      row[h] = Number.isNaN(num) ? v : num
     })
     rows.push(row)
   }
@@ -87,19 +93,56 @@ function assertReportReady(text: string, context: string): string {
   return text
 }
 
+function pollDelay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function fetchReportWithPoll(
+  token: string,
+  clientLogin: string | null,
+  url: string,
+  body: unknown,
+  context: string,
+  maxAttempts = 10
+): Promise<string> {
+  let attempt = 0
+  while (attempt < maxAttempts) {
+    try {
+      const text = await fetchText(
+        url,
+        { method: 'POST', headers: getDirectHeaders(token, clientLogin), body },
+        context
+      )
+      return assertReportReady(text, context)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 202) {
+        attempt += 1
+        if (attempt >= maxAttempts) {
+          throw new ApiError(202, context, 'Отчёт не готов после максимального числа попыток')
+        }
+        await pollDelay(1000 * 2 ** attempt)
+        continue
+      }
+      throw error
+    }
+  }
+  throw new ApiError(202, context, 'Отчёт не готов после максимального числа попыток')
+}
+
 export async function getCampaignReport(
   token: string,
   clientLogin: string | null,
+  campaignId: number,
   dateFrom: string,
   dateTo: string,
   sandbox = false
-): Promise<DirectReportRow[]> {
+): Promise<CampaignPerformanceReportRow[]> {
   const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.reports}`
   const body = {
     params: {
-      SelectionCriteria: { DateFrom: dateFrom, DateTo: dateTo },
-      FieldNames: ['CampaignName', 'CampaignId', 'Impressions', 'Clicks', 'Cost', 'Ctr', 'AvgCpc', 'Conversions'],
-      ReportName: `CampaignReport_${dateFrom}_${dateTo}`,
+      SelectionCriteria: { DateFrom: dateFrom, DateTo: dateTo, CampaignIds: [campaignId] },
+      FieldNames: ['Date', 'Impressions', 'Clicks', 'Cost', 'Ctr', 'AvgCpc', 'Conversions'],
+      ReportName: `CampaignPerformance_${campaignId}_${dateFrom}_${dateTo}`,
       ReportType: 'CAMPAIGN_PERFORMANCE_REPORT',
       Format: 'TSV',
       IncludeVAT: 'YES',
@@ -107,62 +150,57 @@ export async function getCampaignReport(
     },
   }
 
-  const text = await fetchText(
-    url,
-    { method: 'POST', headers: getDirectHeaders(token, clientLogin), body },
-    'Отчёт Директа'
-  )
-  const ready = assertReportReady(text, 'Отчёт Директа')
+  const ready = await fetchReportWithPoll(token, clientLogin, url, body, 'Отчёт Директа')
   const rows = parseTsv(ready)
-  return rows.map((row) => directReportRowSchema.parse(row))
+  return rows.map((row) => campaignPerformanceReportRowSchema.parse(row))
 }
 
 export async function getAdReport(
   token: string,
   clientLogin: string | null,
+  campaignId: number,
   dateFrom: string,
   dateTo: string,
   sandbox = false
-): Promise<string> {
+): Promise<AdReportRow[]> {
   const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.reports}`
   const body = {
     params: {
-      SelectionCriteria: { DateFrom: dateFrom, DateTo: dateTo },
-      FieldNames: ['CampaignName', 'AdGroupName', 'AdId', 'Impressions', 'Clicks', 'Cost'],
-      ReportName: `AdReport_${dateFrom}_${dateTo}`,
+      SelectionCriteria: { DateFrom: dateFrom, DateTo: dateTo, CampaignIds: [campaignId] },
+      FieldNames: ['AdName', 'Impressions', 'Clicks', 'Cost', 'Ctr'],
+      ReportName: `AdReport_${campaignId}_${dateFrom}_${dateTo}`,
       ReportType: 'AD_PERFORMANCE_REPORT',
       Format: 'TSV',
       IncludeVAT: 'YES',
     },
   }
 
-  const text = await fetchText(url, { method: 'POST', headers: getDirectHeaders(token, clientLogin), body }, 'Отчёт по объявлениям')
-  return assertReportReady(text, 'Отчёт по объявлениям')
+  const ready = await fetchReportWithPoll(token, clientLogin, url, body, 'Отчёт по объявлениям')
+  const rows = parseTsv(ready)
+  return rows.map((row) => adReportRowSchema.parse(row))
 }
 
 export async function getSearchTermsReport(
   token: string,
   clientLogin: string | null,
+  campaignId: number,
   dateFrom: string,
   dateTo: string,
   sandbox = false
-): Promise<string> {
+): Promise<SearchTermReportRow[]> {
   const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.reports}`
   const body = {
     params: {
-      SelectionCriteria: { DateFrom: dateFrom, DateTo: dateTo },
-      FieldNames: ['SearchQuery', 'CampaignName', 'Impressions', 'Clicks', 'Cost', 'Ctr'],
-      ReportName: `SearchTerms_${dateFrom}_${dateTo}`,
+      SelectionCriteria: { DateFrom: dateFrom, DateTo: dateTo, CampaignIds: [campaignId] },
+      FieldNames: ['SearchTerm', 'Impressions', 'Clicks', 'Cost', 'Ctr'],
+      ReportName: `SearchTerms_${campaignId}_${dateFrom}_${dateTo}`,
       ReportType: 'SEARCH_QUERY_PERFORMANCE_REPORT',
       Format: 'TSV',
       IncludeVAT: 'YES',
     },
   }
 
-  const text = await fetchText(
-    url,
-    { method: 'POST', headers: getDirectHeaders(token, clientLogin), body },
-    'Отчёт по поисковым запросам'
-  )
-  return assertReportReady(text, 'Отчёт по поисковым запросам')
+  const ready = await fetchReportWithPoll(token, clientLogin, url, body, 'Отчёт по поисковым запросам')
+  const rows = parseTsv(ready)
+  return rows.map((row) => searchTermReportRowSchema.parse(row))
 }

@@ -1,4 +1,4 @@
-import { type Campaign, type DirectReportRow } from '../types'
+import type { Campaign, CampaignPerformanceReportRow, AdReportRow, SearchTermReportRow } from '../types'
 
 import { ApiError } from './client'
 import { getAdReport, getCampaignReport, getCampaigns, getSearchTermsReport, parseTsv } from './direct'
@@ -108,14 +108,13 @@ describe('getCampaigns', () => {
 
 describe('getCampaignReport', () => {
   it('returns parsed report rows', async () => {
-    const tsv = 'CampaignName\tCampaignId\tImpressions\tClicks\tCost\tCtr\tAvgCpc\tConversions\nTest\t123\t1000\t50\t5000\t5\t100\t2'
+    const tsv = 'Date\tImpressions\tClicks\tCost\tCtr\tAvgCpc\tConversions\n2024-01-01\t1000\t50\t5000\t5\t100\t2'
     mockDirectFetch(textResponse(tsv))
 
-    const rows = await getCampaignReport(TOKEN, LOGIN, '2024-01-01', '2024-01-31')
+    const rows = await getCampaignReport(TOKEN, LOGIN, 123, '2024-01-01', '2024-01-31')
     expect(rows).toHaveLength(1)
-    expect(rows[0]).toMatchObject<DirectReportRow>({
-      CampaignName: 'Test',
-      CampaignId: 123,
+    expect(rows[0]).toMatchObject<CampaignPerformanceReportRow>({
+      Date: '2024-01-01',
       Impressions: 1000,
       Clicks: 50,
       Cost: 5000,
@@ -127,22 +126,57 @@ describe('getCampaignReport', () => {
 
   it('throws when report is in progress', async () => {
     mockDirectFetch(textResponse('In progress'))
-    await expect(getCampaignReport(TOKEN, LOGIN, '2024-01-01', '2024-01-31')).rejects.toBeInstanceOf(ApiError)
+    await expect(getCampaignReport(TOKEN, LOGIN, 123, '2024-01-01', '2024-01-31')).rejects.toBeInstanceOf(ApiError)
+  })
+
+  it('polls until report is ready on 202', async () => {
+    vi.useFakeTimers()
+    const tsv = 'Date\tImpressions\tClicks\tCost\tCtr\tAvgCpc\tConversions\n2024-01-01\t1000\t50\t5000\t5\t100\t2'
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ status: 202, body: '' })
+      .mockResolvedValueOnce({ status: 202, body: '' })
+      .mockResolvedValueOnce({ status: 200, body: tsv })
+    vi.stubGlobal('window', { electronAPI: { directFetch: fetchMock } })
+
+    const promise = getCampaignReport(TOKEN, LOGIN, 123, '2024-01-01', '2024-01-31')
+    await vi.runAllTimersAsync()
+    const rows = await promise
+    expect(rows).toHaveLength(1)
+    expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 })
 
 describe('getAdReport', () => {
-  it('returns report text', async () => {
-    mockDirectFetch(textResponse('Ad report content'))
-    const text = await getAdReport(TOKEN, LOGIN, '2024-01-01', '2024-01-31')
-    expect(text).toBe('Ad report content')
+  it('returns parsed ad rows', async () => {
+    const tsv = 'AdName\tImpressions\tClicks\tCost\tCtr\nAd 1\t1000\t50\t5000\t5'
+    mockDirectFetch(textResponse(tsv))
+
+    const rows = await getAdReport(TOKEN, LOGIN, 123, '2024-01-01', '2024-01-31')
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject<AdReportRow>({
+      AdName: 'Ad 1',
+      Impressions: 1000,
+      Clicks: 50,
+      Cost: 5000,
+      Ctr: 5,
+    })
   })
 })
 
 describe('getSearchTermsReport', () => {
-  it('returns report text', async () => {
-    mockDirectFetch(textResponse('Search terms report'))
-    const text = await getSearchTermsReport(TOKEN, LOGIN, '2024-01-01', '2024-01-31')
-    expect(text).toBe('Search terms report')
+  it('returns parsed search term rows', async () => {
+    const tsv = 'SearchTerm\tImpressions\tClicks\tCost\tCtr\nquery\t1000\t50\t5000\t5'
+    mockDirectFetch(textResponse(tsv))
+
+    const rows = await getSearchTermsReport(TOKEN, LOGIN, 123, '2024-01-01', '2024-01-31')
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject<SearchTermReportRow>({
+      SearchTerm: 'query',
+      Impressions: 1000,
+      Clicks: 50,
+      Cost: 5000,
+      Ctr: 5,
+    })
   })
 })
