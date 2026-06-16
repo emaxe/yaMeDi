@@ -2,6 +2,7 @@ import { Target, ToggleLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { useCampaigns } from '../api/direct'
+import { useApp } from '../hooks/useApp'
 import { useDebounce } from '../hooks/useDebounce'
 
 import { Card } from './ui/Card'
@@ -23,6 +24,7 @@ export default function Campaigns() {
   const [sandbox, setSandbox] = useState(false)
   const debouncedSandbox = useDebounce(sandbox, 300)
   const { data: campaigns, isLoading, isError, error, refetch, isSuccess } = useCampaigns(debouncedSandbox)
+  const { selectCampaign } = useApp()
 
   useEffect(() => {
     if (campaigns === undefined && !isLoading && !isError) {
@@ -90,7 +92,11 @@ export default function Campaigns() {
 
       <div className="grid gap-3">
         {campaigns?.map((c) => (
-          <Card key={c.Id} className="p-4 hover:border-primary transition-colors">
+          <Card
+            key={c.Id}
+            className="p-4 hover:border-primary transition-colors cursor-pointer"
+            onClick={() => selectCampaign(c.Id)}
+          >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="space-y-1">
                 <div className="text-body-md font-semibold text-on-background">{c.Name}</div>
