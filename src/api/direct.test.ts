@@ -18,6 +18,11 @@ function textResponse(body: string, status = 200) {
   return { status, body }
 }
 
+function getLastRequestBody(): unknown {
+  const calls = vi.mocked(window.electronAPI!.directFetch).mock.calls
+  return (calls[calls.length - 1][1] as { body: unknown }).body
+}
+
 beforeEach(() => {
   vi.unstubAllGlobals()
   vi.useRealTimers()
@@ -113,6 +118,16 @@ describe('getCampaignReport', () => {
 
     const rows = await getCampaignReport(TOKEN, LOGIN, 123, '2024-01-01', '2024-01-31')
     expect(rows).toHaveLength(1)
+    expect(getLastRequestBody()).toMatchObject({
+      params: {
+        SelectionCriteria: {
+          DateFrom: '2024-01-01',
+          DateTo: '2024-01-31',
+          Filter: [{ Field: 'CampaignId', Operator: 'IN', Values: ['123'] }],
+        },
+        DateRangeType: 'CUSTOM_DATE',
+      },
+    })
     expect(rows[0]).toMatchObject<CampaignPerformanceReportRow>({
       Date: '2024-01-01',
       Impressions: 1000,
@@ -149,13 +164,23 @@ describe('getCampaignReport', () => {
 
 describe('getAdReport', () => {
   it('returns parsed ad rows', async () => {
-    const tsv = 'AdName\tImpressions\tClicks\tCost\tCtr\nAd 1\t1000\t50\t5000\t5'
+    const tsv = 'AdId\tImpressions\tClicks\tCost\tCtr\n123\t1000\t50\t5000\t5'
     mockDirectFetch(textResponse(tsv))
 
     const rows = await getAdReport(TOKEN, LOGIN, 123, '2024-01-01', '2024-01-31')
     expect(rows).toHaveLength(1)
+    expect(getLastRequestBody()).toMatchObject({
+      params: {
+        SelectionCriteria: {
+          DateFrom: '2024-01-01',
+          DateTo: '2024-01-31',
+          Filter: [{ Field: 'CampaignId', Operator: 'IN', Values: ['123'] }],
+        },
+        DateRangeType: 'CUSTOM_DATE',
+      },
+    })
     expect(rows[0]).toMatchObject<AdReportRow>({
-      AdName: 'Ad 1',
+      AdId: 123,
       Impressions: 1000,
       Clicks: 50,
       Cost: 5000,
@@ -166,13 +191,23 @@ describe('getAdReport', () => {
 
 describe('getSearchTermsReport', () => {
   it('returns parsed search term rows', async () => {
-    const tsv = 'SearchTerm\tImpressions\tClicks\tCost\tCtr\nquery\t1000\t50\t5000\t5'
+    const tsv = 'Query\tImpressions\tClicks\tCost\tCtr\nquery\t1000\t50\t5000\t5'
     mockDirectFetch(textResponse(tsv))
 
     const rows = await getSearchTermsReport(TOKEN, LOGIN, 123, '2024-01-01', '2024-01-31')
     expect(rows).toHaveLength(1)
+    expect(getLastRequestBody()).toMatchObject({
+      params: {
+        SelectionCriteria: {
+          DateFrom: '2024-01-01',
+          DateTo: '2024-01-31',
+          Filter: [{ Field: 'CampaignId', Operator: 'IN', Values: ['123'] }],
+        },
+        DateRangeType: 'CUSTOM_DATE',
+      },
+    })
     expect(rows[0]).toMatchObject<SearchTermReportRow>({
-      SearchTerm: 'query',
+      Query: 'query',
       Impressions: 1000,
       Clicks: 50,
       Cost: 5000,

@@ -23,7 +23,7 @@ const COLUMNS: DataTableColumn[] = [
 function transformRows(rows: SearchTermReportRow[] | undefined): DataTableRow[] {
   if (!rows) return []
   return rows.map((row) => ({
-    name: row.SearchTerm,
+    name: row.Query,
     Impressions: row.Impressions,
     Clicks: row.Clicks,
     Cost: row.Cost,

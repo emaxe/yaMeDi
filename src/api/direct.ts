@@ -140,10 +140,15 @@ export async function getCampaignReport(
   const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.reports}`
   const body = {
     params: {
-      SelectionCriteria: { DateFrom: dateFrom, DateTo: dateTo, CampaignIds: [campaignId] },
+      SelectionCriteria: {
+        DateFrom: dateFrom,
+        DateTo: dateTo,
+        Filter: [{ Field: 'CampaignId', Operator: 'IN', Values: [String(campaignId)] }],
+      },
       FieldNames: ['Date', 'Impressions', 'Clicks', 'Cost', 'Ctr', 'AvgCpc', 'Conversions'],
       ReportName: `CampaignPerformance_${campaignId}_${dateFrom}_${dateTo}`,
       ReportType: 'CAMPAIGN_PERFORMANCE_REPORT',
+      DateRangeType: 'CUSTOM_DATE',
       Format: 'TSV',
       IncludeVAT: 'YES',
       IncludeDiscount: 'NO',
@@ -166,10 +171,15 @@ export async function getAdReport(
   const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.reports}`
   const body = {
     params: {
-      SelectionCriteria: { DateFrom: dateFrom, DateTo: dateTo, CampaignIds: [campaignId] },
-      FieldNames: ['AdName', 'Impressions', 'Clicks', 'Cost', 'Ctr'],
+      SelectionCriteria: {
+        DateFrom: dateFrom,
+        DateTo: dateTo,
+        Filter: [{ Field: 'CampaignId', Operator: 'IN', Values: [String(campaignId)] }],
+      },
+      FieldNames: ['AdId', 'Impressions', 'Clicks', 'Cost', 'Ctr'],
       ReportName: `AdReport_${campaignId}_${dateFrom}_${dateTo}`,
       ReportType: 'AD_PERFORMANCE_REPORT',
+      DateRangeType: 'CUSTOM_DATE',
       Format: 'TSV',
       IncludeVAT: 'YES',
     },
@@ -191,10 +201,15 @@ export async function getSearchTermsReport(
   const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.reports}`
   const body = {
     params: {
-      SelectionCriteria: { DateFrom: dateFrom, DateTo: dateTo, CampaignIds: [campaignId] },
-      FieldNames: ['SearchTerm', 'Impressions', 'Clicks', 'Cost', 'Ctr'],
+      SelectionCriteria: {
+        DateFrom: dateFrom,
+        DateTo: dateTo,
+        Filter: [{ Field: 'CampaignId', Operator: 'IN', Values: [String(campaignId)] }],
+      },
+      FieldNames: ['Query', 'Impressions', 'Clicks', 'Cost', 'Ctr'],
       ReportName: `SearchTerms_${campaignId}_${dateFrom}_${dateTo}`,
       ReportType: 'SEARCH_QUERY_PERFORMANCE_REPORT',
+      DateRangeType: 'CUSTOM_DATE',
       Format: 'TSV',
       IncludeVAT: 'YES',
     },

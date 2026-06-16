@@ -23,7 +23,7 @@ const COLUMNS: DataTableColumn[] = [
 function transformRows(rows: AdReportRow[] | undefined): DataTableRow[] {
   if (!rows) return []
   return rows.map((row) => ({
-    name: row.AdName,
+    name: String(row.AdId),
     Impressions: row.Impressions,
     Clicks: row.Clicks,
     Cost: row.Cost,

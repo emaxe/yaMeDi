@@ -141,7 +141,7 @@ export const campaignPerformanceReportRowSchema = z.object({
 })
 
 export interface AdReportRow {
-  AdName: string
+  AdId: number
   Impressions: number
   Clicks: number
   Cost: number
@@ -149,7 +149,7 @@ export interface AdReportRow {
 }
 
 export const adReportRowSchema = z.object({
-  AdName: z.string(),
+  AdId: z.union([z.string(), z.number()]).transform((v) => (typeof v === 'string' ? parseInt(v, 10) : v)),
   Impressions: numericFieldSchema,
   Clicks: numericFieldSchema,
   Cost: numericFieldSchema,
@@ -157,7 +157,7 @@ export const adReportRowSchema = z.object({
 })
 
 export interface SearchTermReportRow {
-  SearchTerm: string
+  Query: string
   Impressions: number
   Clicks: number
   Cost: number
@@ -165,7 +165,7 @@ export interface SearchTermReportRow {
 }
 
 export const searchTermReportRowSchema = z.object({
-  SearchTerm: z.string(),
+  Query: z.string(),
   Impressions: numericFieldSchema,
   Clicks: numericFieldSchema,
   Cost: numericFieldSchema,

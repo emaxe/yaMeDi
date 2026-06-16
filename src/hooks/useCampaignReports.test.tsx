@@ -55,7 +55,7 @@ describe('useCampaignPerformanceReport', () => {
 
 describe('useAdReport', () => {
   it('returns parsed ad rows', async () => {
-    const tsv = 'AdName\tImpressions\tClicks\tCost\tCtr\nAd 1\t1000\t50\t5000\t5'
+    const tsv = 'AdId\tImpressions\tClicks\tCost\tCtr\n123\t1000\t50\t5000\t5'
     mockDirectFetch({ status: 200, body: tsv })
 
     const { result } = renderHook(
@@ -64,13 +64,13 @@ describe('useAdReport', () => {
     )
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toHaveLength(1)
-    expect(result.current.data?.[0]).toMatchObject({ AdName: 'Ad 1', Clicks: 50 })
+    expect(result.current.data?.[0]).toMatchObject({ AdId: 123, Clicks: 50 })
   })
 })
 
 describe('useSearchTermsReport', () => {
   it('returns parsed search term rows', async () => {
-    const tsv = 'SearchTerm\tImpressions\tClicks\tCost\tCtr\nquery\t1000\t50\t5000\t5'
+    const tsv = 'Query\tImpressions\tClicks\tCost\tCtr\nquery\t1000\t50\t5000\t5'
     mockDirectFetch({ status: 200, body: tsv })
 
     const { result } = renderHook(
@@ -79,7 +79,7 @@ describe('useSearchTermsReport', () => {
     )
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toHaveLength(1)
-    expect(result.current.data?.[0]).toMatchObject({ SearchTerm: 'query', Clicks: 50 })
+    expect(result.current.data?.[0]).toMatchObject({ Query: 'query', Clicks: 50 })
   })
 })
 
