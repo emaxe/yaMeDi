@@ -31,6 +31,8 @@ export function createMockAppState(overrides: Partial<AppState> = {}): AppState 
     selectCampaign: vi.fn(),
     dateRange: getDefaultDates(),
     setDateRange: vi.fn(),
+    directSandbox: false,
+    setDirectSandbox: vi.fn(),
     isDrawerOpen: false,
     setDrawerOpen: vi.fn(),
     ...overrides,

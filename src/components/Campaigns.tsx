@@ -1,5 +1,5 @@
 import { Target, ToggleLeft } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 import { useCampaigns } from '../api/direct'
 import { useApp } from '../hooks/useApp'
@@ -21,10 +21,9 @@ function campaignStatusVariant(status: CampaignStatus) {
 }
 
 export default function Campaigns() {
-  const [sandbox, setSandbox] = useState(false)
-  const debouncedSandbox = useDebounce(sandbox, 300)
+  const { directSandbox, setDirectSandbox, selectCampaign } = useApp()
+  const debouncedSandbox = useDebounce(directSandbox, 300)
   const { data: campaigns, isLoading, isError, error, refetch, isSuccess } = useCampaigns(debouncedSandbox)
-  const { selectCampaign } = useApp()
 
   useEffect(() => {
     if (campaigns === undefined && !isLoading && !isError) {
@@ -50,14 +49,14 @@ export default function Campaigns() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <button
             type="button"
-            onClick={() => setSandbox(!sandbox)}
+            onClick={() => setDirectSandbox(!directSandbox)}
             className={`inline-flex items-center justify-center gap-2 h-9 px-3 rounded-sm text-label-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus ${
-              sandbox
+              directSandbox
                 ? 'bg-warning/10 text-warning border border-warning/20'
                 : 'bg-surface-elevated border border-outline text-on-surface-muted hover:text-on-surface'
             }`}
-            aria-pressed={sandbox}
-            aria-label={sandbox ? 'Отключить песочницу Директа' : 'Включить песочницу Директа'}
+            aria-pressed={directSandbox}
+            aria-label={directSandbox ? 'Отключить песочницу Директа' : 'Включить песочницу Директа'}
           >
             <ToggleLeft className="w-4 h-4" aria-hidden="true" />
             Песочница

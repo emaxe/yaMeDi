@@ -13,6 +13,8 @@ export interface AppState {
   selectCampaign: (id: number) => void
   dateRange: DateRange
   setDateRange: (range: DateRange) => void
+  directSandbox: boolean
+  setDirectSandbox: (sandbox: boolean) => void
   isDrawerOpen: boolean
   setDrawerOpen: (open: boolean) => void
 }

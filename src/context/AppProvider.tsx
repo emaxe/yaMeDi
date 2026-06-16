@@ -10,6 +10,7 @@ export function AppProvider({ children }: AppProviderProps) {
   const [selectedCounter, setSelectedCounter] = useState<Counter | null>(null)
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null)
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultDates)
+  const [directSandbox, setDirectSandbox] = useState(false)
   const [isDrawerOpen, setDrawerOpen] = useState(false)
 
   const selectCounter = useCallback((counter: Counter) => {
@@ -35,6 +36,8 @@ export function AppProvider({ children }: AppProviderProps) {
         selectCampaign,
         dateRange,
         setDateRange,
+        directSandbox,
+        setDirectSandbox,
         isDrawerOpen,
         setDrawerOpen,
       }}
