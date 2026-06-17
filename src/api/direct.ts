@@ -160,6 +160,35 @@ export async function getCampaignReport(
   return rows.map((row) => campaignPerformanceReportRowSchema.parse(row))
 }
 
+export async function getOverallCampaignReport(
+  token: string,
+  clientLogin: string | null,
+  dateFrom: string,
+  dateTo: string,
+  sandbox = false
+): Promise<CampaignPerformanceReportRow[]> {
+  const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.reports}`
+  const body = {
+    params: {
+      SelectionCriteria: {
+        DateFrom: dateFrom,
+        DateTo: dateTo,
+      },
+      FieldNames: ['CampaignId', 'CampaignName', 'Date', 'Impressions', 'Clicks', 'Cost', 'Ctr', 'AvgCpc', 'Conversions'],
+      ReportName: `OverallCampaignPerformance_${dateFrom}_${dateTo}`,
+      ReportType: 'CAMPAIGN_PERFORMANCE_REPORT',
+      DateRangeType: 'CUSTOM_DATE',
+      Format: 'TSV',
+      IncludeVAT: 'YES',
+      IncludeDiscount: 'NO',
+    },
+  }
+
+  const ready = await fetchReportWithPoll(token, clientLogin, url, body, 'Общий отчёт по кампаниям')
+  const rows = parseTsv(ready)
+  return rows.map((row) => campaignPerformanceReportRowSchema.parse(row))
+}
+
 export async function getAdReport(
   token: string,
   clientLogin: string | null,
