@@ -6,7 +6,7 @@ import { isValidDateRange } from '../lib/dateRanges'
 import { AdsReport } from './campaign-analytics/AdsReport'
 import { KpiCards } from './campaign-analytics/KpiCards'
 import { CampaignSelector } from './campaign-analytics/CampaignSelector'
-import { CampaignSearchTermsReport } from './campaign-analytics/CampaignSearchTermsReport'
+import { SearchTermsReport } from './campaign-analytics/SearchTermsReport'
 import { TrendChart } from './campaign-analytics/TrendChart'
 import { DateRangePicker } from './ui/DateRangePicker'
 import { EmptyState } from './ui/EmptyState'
@@ -69,7 +69,7 @@ export default function CampaignAnalytics() {
           dateTo={dateRange.to}
           sandbox={directSandbox}
         />
-        <CampaignSearchTermsReport
+        <SearchTermsReport
           campaignId={selectedCampaignId}
           dateFrom={dateRange.from}
           dateTo={dateRange.to}
