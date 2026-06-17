@@ -146,6 +146,8 @@ export interface AdReportRow {
   Clicks: number
   Cost: number
   Ctr: number
+  CampaignId?: number
+  CampaignName?: string
 }
 
 export const adReportRowSchema = z.object({
@@ -154,6 +156,8 @@ export const adReportRowSchema = z.object({
   Clicks: numericFieldSchema,
   Cost: numericFieldSchema,
   Ctr: numericFieldSchema,
+  CampaignId: z.union([z.string(), z.number()]).transform((v) => (typeof v === 'string' ? parseInt(v, 10) : v)).optional(),
+  CampaignName: z.string().optional(),
 })
 
 export interface SearchTermReportRow {
