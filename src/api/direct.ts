@@ -160,6 +160,35 @@ export async function getCampaignReport(
   return rows.map((row) => campaignPerformanceReportRowSchema.parse(row))
 }
 
+export async function getOverallCampaignReport(
+  token: string,
+  clientLogin: string | null,
+  dateFrom: string,
+  dateTo: string,
+  sandbox = false
+): Promise<CampaignPerformanceReportRow[]> {
+  const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.reports}`
+  const body = {
+    params: {
+      SelectionCriteria: {
+        DateFrom: dateFrom,
+        DateTo: dateTo,
+      },
+      FieldNames: ['CampaignId', 'CampaignName', 'Date', 'Impressions', 'Clicks', 'Cost', 'Ctr', 'AvgCpc', 'Conversions'],
+      ReportName: `OverallCampaignPerformance_${dateFrom}_${dateTo}`,
+      ReportType: 'CAMPAIGN_PERFORMANCE_REPORT',
+      DateRangeType: 'CUSTOM_DATE',
+      Format: 'TSV',
+      IncludeVAT: 'YES',
+      IncludeDiscount: 'NO',
+    },
+  }
+
+  const ready = await fetchReportWithPoll(token, clientLogin, url, body, 'Общий отчёт по кампаниям')
+  const rows = parseTsv(ready)
+  return rows.map((row) => campaignPerformanceReportRowSchema.parse(row))
+}
+
 export async function getAdReport(
   token: string,
   clientLogin: string | null,
@@ -190,6 +219,34 @@ export async function getAdReport(
   return rows.map((row) => adReportRowSchema.parse(row))
 }
 
+export async function getOverallAdReport(
+  token: string,
+  clientLogin: string | null,
+  dateFrom: string,
+  dateTo: string,
+  sandbox = false
+): Promise<AdReportRow[]> {
+  const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.reports}`
+  const body = {
+    params: {
+      SelectionCriteria: {
+        DateFrom: dateFrom,
+        DateTo: dateTo,
+      },
+      FieldNames: ['CampaignId', 'CampaignName', 'AdId', 'Impressions', 'Clicks', 'Cost', 'Ctr'],
+      ReportName: `OverallAdReport_${dateFrom}_${dateTo}`,
+      ReportType: 'AD_PERFORMANCE_REPORT',
+      DateRangeType: 'CUSTOM_DATE',
+      Format: 'TSV',
+      IncludeVAT: 'YES',
+    },
+  }
+
+  const ready = await fetchReportWithPoll(token, clientLogin, url, body, 'Общий отчёт по объявлениям')
+  const rows = parseTsv(ready)
+  return rows.map((row) => adReportRowSchema.parse(row))
+}
+
 export async function getSearchTermsReport(
   token: string,
   clientLogin: string | null,
@@ -216,6 +273,34 @@ export async function getSearchTermsReport(
   }
 
   const ready = await fetchReportWithPoll(token, clientLogin, url, body, 'Отчёт по поисковым запросам')
+  const rows = parseTsv(ready)
+  return rows.map((row) => searchTermReportRowSchema.parse(row))
+}
+
+export async function getOverallSearchTermsReport(
+  token: string,
+  clientLogin: string | null,
+  dateFrom: string,
+  dateTo: string,
+  sandbox = false
+): Promise<SearchTermReportRow[]> {
+  const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.reports}`
+  const body = {
+    params: {
+      SelectionCriteria: {
+        DateFrom: dateFrom,
+        DateTo: dateTo,
+      },
+      FieldNames: ['CampaignId', 'CampaignName', 'Query', 'Impressions', 'Clicks', 'Cost', 'Ctr'],
+      ReportName: `OverallSearchTerms_${dateFrom}_${dateTo}`,
+      ReportType: 'SEARCH_QUERY_PERFORMANCE_REPORT',
+      DateRangeType: 'CUSTOM_DATE',
+      Format: 'TSV',
+      IncludeVAT: 'YES',
+    },
+  }
+
+  const ready = await fetchReportWithPoll(token, clientLogin, url, body, 'Общий отчёт по поисковым запросам')
   const rows = parseTsv(ready)
   return rows.map((row) => searchTermReportRowSchema.parse(row))
 }

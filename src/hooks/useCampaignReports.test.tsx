@@ -51,6 +51,24 @@ describe('useCampaignPerformanceReport', () => {
     )
     expect(result.current.isFetching).toBe(false)
   })
+
+  it('calls getOverallCampaignReport when campaignId is "all"', async () => {
+    const tsv = 'CampaignId\tCampaignName\tDate\tImpressions\tClicks\tCost\tCtr\tAvgCpc\tConversions\n1\tCampaign A\t2024-01-01\t1000\t50\t5000\t5\t100\t2'
+    mockDirectFetch({ status: 200, body: tsv })
+
+    const { result } = renderHook(
+      () => useCampaignPerformanceReport('all', { from: '2024-01-01', to: '2024-01-31' }),
+      { wrapper }
+    )
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data?.[0]).toMatchObject({
+      CampaignId: 1,
+      CampaignName: 'Campaign A',
+      Date: '2024-01-01',
+      Clicks: 50,
+    })
+  })
 })
 
 describe('useAdReport', () => {
@@ -66,6 +84,24 @@ describe('useAdReport', () => {
     expect(result.current.data).toHaveLength(1)
     expect(result.current.data?.[0]).toMatchObject({ AdId: 123, Clicks: 50 })
   })
+
+  it('calls getOverallAdReport when campaignId is "all"', async () => {
+    const tsv = 'CampaignId\tCampaignName\tAdId\tImpressions\tClicks\tCost\tCtr\n1\tCampaign A\t10\t1000\t50\t5000\t5'
+    mockDirectFetch({ status: 200, body: tsv })
+
+    const { result } = renderHook(
+      () => useAdReport('all', { from: '2024-01-01', to: '2024-01-31' }),
+      { wrapper }
+    )
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data?.[0]).toMatchObject({
+      CampaignId: 1,
+      CampaignName: 'Campaign A',
+      AdId: 10,
+      Clicks: 50,
+    })
+  })
 })
 
 describe('useSearchTermsReport', () => {
@@ -80,6 +116,24 @@ describe('useSearchTermsReport', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toHaveLength(1)
     expect(result.current.data?.[0]).toMatchObject({ Query: 'query', Clicks: 50 })
+  })
+
+  it('calls getOverallSearchTermsReport when campaignId is "all"', async () => {
+    const tsv = 'CampaignId\tCampaignName\tQuery\tImpressions\tClicks\tCost\tCtr\n1\tCampaign A\tquery\t1000\t50\t5000\t5'
+    mockDirectFetch({ status: 200, body: tsv })
+
+    const { result } = renderHook(
+      () => useSearchTermsReport('all', { from: '2024-01-01', to: '2024-01-31' }),
+      { wrapper }
+    )
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data?.[0]).toMatchObject({
+      CampaignId: 1,
+      CampaignName: 'Campaign A',
+      Query: 'query',
+      Clicks: 50,
+    })
   })
 })
 

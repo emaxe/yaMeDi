@@ -16,8 +16,8 @@ import { CHART_COLORS, axisStroke, gridStyle, labelStyle, legendStyle, tickStyle
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { DashboardWidget } from '../ui/DashboardWidget'
 
-interface CampaignTrendChartProps {
-  campaignId: number
+interface TrendChartProps {
+  campaignId: number | 'all'
   dateFrom: string
   dateTo: string
   sandbox?: boolean
@@ -32,14 +32,26 @@ function transformToChartData(
   rows: CampaignPerformanceReportRow[] | undefined
 ): ChartDataPoint[] {
   if (!rows) return []
-  return rows.map((row) => ({
-    date: row.Date,
-    Clicks: row.Clicks,
-    Cost: row.Cost,
+  const aggregated = new Map<string, { Clicks: number; Cost: number }>()
+
+  for (const row of rows) {
+    const existing = aggregated.get(row.Date)
+    if (existing) {
+      existing.Clicks += row.Clicks
+      existing.Cost += row.Cost
+    } else {
+      aggregated.set(row.Date, { Clicks: row.Clicks, Cost: row.Cost })
+    }
+  }
+
+  return Array.from(aggregated.entries()).map(([date, metrics]) => ({
+    date,
+    Clicks: metrics.Clicks,
+    Cost: metrics.Cost,
   }))
 }
 
-export function CampaignTrendChart({ campaignId, dateFrom, dateTo, sandbox = false }: CampaignTrendChartProps) {
+export function TrendChart({ campaignId, dateFrom, dateTo, sandbox = false }: TrendChartProps) {
   const { data, isLoading, error, refetch } = useCampaignPerformanceReport(
     campaignId,
     { from: dateFrom, to: dateTo },
@@ -50,8 +62,11 @@ export function CampaignTrendChart({ campaignId, dateFrom, dateTo, sandbox = fal
 
   function handleExport() {
     if (!chartData.length) return
+    const filename = campaignId === 'all'
+      ? `overall-trend-${dateFrom}-${dateTo}.csv`
+      : `campaign-trend-${campaignId}-${dateFrom}-${dateTo}.csv`
     exportToCsv(
-      `campaign-trend-${campaignId}-${dateFrom}-${dateTo}.csv`,
+      filename,
       [{ key: 'date', label: 'Дата' }, ...METRICS.map((m) => ({ key: m.key, label: m.label }))],
       chartData
     )

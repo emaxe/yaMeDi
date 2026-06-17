@@ -3,11 +3,11 @@ import { TrendingUp } from 'lucide-react'
 import { useApp } from '../hooks/useApp'
 import { isValidDateRange } from '../lib/dateRanges'
 
-import { CampaignAdsReport } from './campaign-analytics/CampaignAdsReport'
-import { CampaignKpiCards } from './campaign-analytics/CampaignKpiCards'
+import { AdsReport } from './campaign-analytics/AdsReport'
+import { KpiCards } from './campaign-analytics/KpiCards'
 import { CampaignSelector } from './campaign-analytics/CampaignSelector'
-import { CampaignSearchTermsReport } from './campaign-analytics/CampaignSearchTermsReport'
-import { CampaignTrendChart } from './campaign-analytics/CampaignTrendChart'
+import { SearchTermsReport } from './campaign-analytics/SearchTermsReport'
+import { TrendChart } from './campaign-analytics/TrendChart'
 import { DateRangePicker } from './ui/DateRangePicker'
 import { EmptyState } from './ui/EmptyState'
 import { ErrorAlert } from './ui/ErrorAlert'
@@ -48,14 +48,14 @@ export default function CampaignAnalytics() {
         <ErrorAlert message="Выберите корректный период: начало не позже конца, даты не в будущем" />
       )}
 
-      <CampaignKpiCards
+      <KpiCards
         campaignId={selectedCampaignId}
         dateFrom={dateRange.from}
         dateTo={dateRange.to}
         sandbox={directSandbox}
       />
 
-      <CampaignTrendChart
+      <TrendChart
         campaignId={selectedCampaignId}
         dateFrom={dateRange.from}
         dateTo={dateRange.to}
@@ -63,13 +63,13 @@ export default function CampaignAnalytics() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CampaignAdsReport
+        <AdsReport
           campaignId={selectedCampaignId}
           dateFrom={dateRange.from}
           dateTo={dateRange.to}
           sandbox={directSandbox}
         />
-        <CampaignSearchTermsReport
+        <SearchTermsReport
           campaignId={selectedCampaignId}
           dateFrom={dateRange.from}
           dateTo={dateRange.to}

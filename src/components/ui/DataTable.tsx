@@ -8,6 +8,7 @@ export type DataTableColumn = {
   key: string
   label: string
   metric?: string
+  format?: (value: number) => string
   align?: 'left' | 'right'
   sortable?: boolean
 }
@@ -101,7 +102,11 @@ export function DataTable({ columns, rows, maxRows, className }: DataTableProps)
                   >
                     {isFirst
                       ? String(value ?? '—')
-                      : formatMetricValue(Number(value ?? 0), column.metric)}
+                      : column.format
+                        ? column.format(Number(value ?? 0))
+                        : typeof value === 'string'
+                          ? value
+                          : formatMetricValue(Number(value ?? 0), column.metric)}
                   </td>
                 )
               })}
