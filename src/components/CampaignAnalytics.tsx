@@ -3,7 +3,7 @@ import { TrendingUp } from 'lucide-react'
 import { useApp } from '../hooks/useApp'
 import { isValidDateRange } from '../lib/dateRanges'
 
-import { CampaignAdsReport } from './campaign-analytics/CampaignAdsReport'
+import { AdsReport } from './campaign-analytics/AdsReport'
 import { KpiCards } from './campaign-analytics/KpiCards'
 import { CampaignSelector } from './campaign-analytics/CampaignSelector'
 import { CampaignSearchTermsReport } from './campaign-analytics/CampaignSearchTermsReport'
@@ -63,7 +63,7 @@ export default function CampaignAnalytics() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CampaignAdsReport
+        <AdsReport
           campaignId={selectedCampaignId}
           dateFrom={dateRange.from}
           dateTo={dateRange.to}

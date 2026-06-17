@@ -31,7 +31,9 @@ export function MobileListCard({ columns, rows, maxRows, className }: MobileList
               <div key={column.key} className="text-body-sm">
                 <span className="text-on-surface-muted">{column.label}: </span>
                 <span className={cn('font-medium', column.align === 'right' && 'ml-auto')}>
-                  {formatMetricValue(Number(row[column.key] ?? 0), column.metric)}
+                  {typeof row[column.key] === 'string'
+                    ? row[column.key]
+                    : formatMetricValue(Number(row[column.key] ?? 0), column.metric)}
                 </span>
               </div>
             ))}

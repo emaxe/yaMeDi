@@ -104,7 +104,9 @@ export function DataTable({ columns, rows, maxRows, className }: DataTableProps)
                       ? String(value ?? '—')
                       : column.format
                         ? column.format(Number(value ?? 0))
-                        : formatMetricValue(Number(value ?? 0), column.metric)}
+                        : typeof value === 'string'
+                          ? value
+                          : formatMetricValue(Number(value ?? 0), column.metric)}
                   </td>
                 )
               })}
