@@ -7,7 +7,7 @@ import { CampaignAdsReport } from './campaign-analytics/CampaignAdsReport'
 import { KpiCards } from './campaign-analytics/KpiCards'
 import { CampaignSelector } from './campaign-analytics/CampaignSelector'
 import { CampaignSearchTermsReport } from './campaign-analytics/CampaignSearchTermsReport'
-import { CampaignTrendChart } from './campaign-analytics/CampaignTrendChart'
+import { TrendChart } from './campaign-analytics/TrendChart'
 import { DateRangePicker } from './ui/DateRangePicker'
 import { EmptyState } from './ui/EmptyState'
 import { ErrorAlert } from './ui/ErrorAlert'
@@ -55,7 +55,7 @@ export default function CampaignAnalytics() {
         sandbox={directSandbox}
       />
 
-      <CampaignTrendChart
+      <TrendChart
         campaignId={selectedCampaignId}
         dateFrom={dateRange.from}
         dateTo={dateRange.to}
