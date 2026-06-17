@@ -276,3 +276,31 @@ export async function getSearchTermsReport(
   const rows = parseTsv(ready)
   return rows.map((row) => searchTermReportRowSchema.parse(row))
 }
+
+export async function getOverallSearchTermsReport(
+  token: string,
+  clientLogin: string | null,
+  dateFrom: string,
+  dateTo: string,
+  sandbox = false
+): Promise<SearchTermReportRow[]> {
+  const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.reports}`
+  const body = {
+    params: {
+      SelectionCriteria: {
+        DateFrom: dateFrom,
+        DateTo: dateTo,
+      },
+      FieldNames: ['CampaignId', 'CampaignName', 'Query', 'Impressions', 'Clicks', 'Cost', 'Ctr'],
+      ReportName: `OverallSearchTerms_${dateFrom}_${dateTo}`,
+      ReportType: 'SEARCH_QUERY_PERFORMANCE_REPORT',
+      DateRangeType: 'CUSTOM_DATE',
+      Format: 'TSV',
+      IncludeVAT: 'YES',
+    },
+  }
+
+  const ready = await fetchReportWithPoll(token, clientLogin, url, body, 'Общий отчёт по поисковым запросам')
+  const rows = parseTsv(ready)
+  return rows.map((row) => searchTermReportRowSchema.parse(row))
+}

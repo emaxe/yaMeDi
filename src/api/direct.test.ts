@@ -1,7 +1,7 @@
 import type { Campaign, CampaignPerformanceReportRow, AdReportRow, SearchTermReportRow } from '../types'
 
 import { ApiError } from './client'
-import { getAdReport, getCampaignReport, getCampaigns, getOverallAdReport, getOverallCampaignReport, getSearchTermsReport, parseTsv } from './direct'
+import { getAdReport, getCampaignReport, getCampaigns, getOverallAdReport, getOverallCampaignReport, getOverallSearchTermsReport, getSearchTermsReport, parseTsv } from './direct'
 
 const TOKEN = 'test-token'
 const LOGIN = 'test-user'
@@ -283,6 +283,43 @@ describe('getSearchTermsReport', () => {
       },
     })
     expect(rows[0]).toMatchObject<SearchTermReportRow>({
+      Query: 'query',
+      Impressions: 1000,
+      Clicks: 50,
+      Cost: 5000,
+      Ctr: 5,
+    })
+  })
+})
+
+describe('getOverallSearchTermsReport', () => {
+  it('returns parsed overall search term rows without CampaignIds filter', async () => {
+    const tsv = 'CampaignId\tCampaignName\tQuery\tImpressions\tClicks\tCost\tCtr\n1\tCampaign A\tquery\t1000\t50\t5000\t5'
+    mockDirectFetch(textResponse(tsv))
+
+    const rows = await getOverallSearchTermsReport(TOKEN, LOGIN, '2024-01-01', '2024-01-31')
+    expect(rows).toHaveLength(1)
+    expect(getLastRequestBody()).toMatchObject({
+      params: {
+        SelectionCriteria: {
+          DateFrom: '2024-01-01',
+          DateTo: '2024-01-31',
+        },
+        FieldNames: ['CampaignId', 'CampaignName', 'Query', 'Impressions', 'Clicks', 'Cost', 'Ctr'],
+        ReportType: 'SEARCH_QUERY_PERFORMANCE_REPORT',
+        DateRangeType: 'CUSTOM_DATE',
+      },
+    })
+    expect(getLastRequestBody()).not.toMatchObject({
+      params: {
+        SelectionCriteria: {
+          CampaignIds: expect.anything(),
+        },
+      },
+    })
+    expect(rows[0]).toMatchObject<SearchTermReportRow>({
+      CampaignId: 1,
+      CampaignName: 'Campaign A',
       Query: 'query',
       Impressions: 1000,
       Clicks: 50,
