@@ -219,6 +219,34 @@ export async function getAdReport(
   return rows.map((row) => adReportRowSchema.parse(row))
 }
 
+export async function getOverallAdReport(
+  token: string,
+  clientLogin: string | null,
+  dateFrom: string,
+  dateTo: string,
+  sandbox = false
+): Promise<AdReportRow[]> {
+  const url = `${getDirectBaseUrl(sandbox)}${API_ENDPOINTS.direct.reports}`
+  const body = {
+    params: {
+      SelectionCriteria: {
+        DateFrom: dateFrom,
+        DateTo: dateTo,
+      },
+      FieldNames: ['CampaignId', 'CampaignName', 'AdId', 'Impressions', 'Clicks', 'Cost', 'Ctr'],
+      ReportName: `OverallAdReport_${dateFrom}_${dateTo}`,
+      ReportType: 'AD_PERFORMANCE_REPORT',
+      DateRangeType: 'CUSTOM_DATE',
+      Format: 'TSV',
+      IncludeVAT: 'YES',
+    },
+  }
+
+  const ready = await fetchReportWithPoll(token, clientLogin, url, body, 'Общий отчёт по объявлениям')
+  const rows = parseTsv(ready)
+  return rows.map((row) => adReportRowSchema.parse(row))
+}
+
 export async function getSearchTermsReport(
   token: string,
   clientLogin: string | null,
