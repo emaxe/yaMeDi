@@ -14,6 +14,7 @@ const CountersList = lazy(() => import('./components/CountersList'))
 const MetricsDashboard = lazy(() => import('./components/MetricsDashboard'))
 const Campaigns = lazy(() => import('./components/Campaigns'))
 const CampaignAnalytics = lazy(() => import('./components/CampaignAnalytics'))
+const OverallAnalytics = lazy(() => import('./components/OverallAnalytics').then((m) => ({ default: m.OverallAnalytics })))
 
 function TabLoader() {
   return (
@@ -85,6 +86,13 @@ export default function App() {
               {activeTab === 'campaigns' && (
                 <Suspense fallback={<TabLoader />}>
                   <Campaigns />
+                </Suspense>
+              )}
+            </ErrorBoundary>
+            <ErrorBoundary>
+              {activeTab === 'overall-analytics' && (
+                <Suspense fallback={<TabLoader />}>
+                  <OverallAnalytics />
                 </Suspense>
               )}
             </ErrorBoundary>
