@@ -128,6 +128,8 @@ export interface CampaignPerformanceReportRow {
   Ctr: number
   AvgCpc: number
   Conversions: number
+  CampaignId?: number
+  CampaignName?: string
 }
 
 export const campaignPerformanceReportRowSchema = z.object({
@@ -138,6 +140,8 @@ export const campaignPerformanceReportRowSchema = z.object({
   Ctr: numericFieldSchema,
   AvgCpc: numericFieldSchema,
   Conversions: numericFieldSchema,
+  CampaignId: z.union([z.string(), z.number()]).transform((v) => (typeof v === 'string' ? parseInt(v, 10) : v)).optional(),
+  CampaignName: z.string().optional(),
 })
 
 export interface AdReportRow {
@@ -146,6 +150,8 @@ export interface AdReportRow {
   Clicks: number
   Cost: number
   Ctr: number
+  CampaignId?: number
+  CampaignName?: string
 }
 
 export const adReportRowSchema = z.object({
@@ -154,6 +160,8 @@ export const adReportRowSchema = z.object({
   Clicks: numericFieldSchema,
   Cost: numericFieldSchema,
   Ctr: numericFieldSchema,
+  CampaignId: z.union([z.string(), z.number()]).transform((v) => (typeof v === 'string' ? parseInt(v, 10) : v)).optional(),
+  CampaignName: z.string().optional(),
 })
 
 export interface SearchTermReportRow {
@@ -162,6 +170,8 @@ export interface SearchTermReportRow {
   Clicks: number
   Cost: number
   Ctr: number
+  CampaignId?: number
+  CampaignName?: string
 }
 
 export const searchTermReportRowSchema = z.object({
@@ -170,6 +180,8 @@ export const searchTermReportRowSchema = z.object({
   Clicks: numericFieldSchema,
   Cost: numericFieldSchema,
   Ctr: numericFieldSchema,
+  CampaignId: z.union([z.string(), z.number()]).transform((v) => (typeof v === 'string' ? parseInt(v, 10) : v)).optional(),
+  CampaignName: z.string().optional(),
 })
 
 /** @deprecated use campaignPerformanceReportRowSchema */
