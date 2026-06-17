@@ -4,7 +4,7 @@ import { useApp } from '../hooks/useApp'
 import { isValidDateRange } from '../lib/dateRanges'
 
 import { CampaignAdsReport } from './campaign-analytics/CampaignAdsReport'
-import { CampaignKpiCards } from './campaign-analytics/CampaignKpiCards'
+import { KpiCards } from './campaign-analytics/KpiCards'
 import { CampaignSelector } from './campaign-analytics/CampaignSelector'
 import { CampaignSearchTermsReport } from './campaign-analytics/CampaignSearchTermsReport'
 import { CampaignTrendChart } from './campaign-analytics/CampaignTrendChart'
@@ -48,7 +48,7 @@ export default function CampaignAnalytics() {
         <ErrorAlert message="Выберите корректный период: начало не позже конца, даты не в будущем" />
       )}
 
-      <CampaignKpiCards
+      <KpiCards
         campaignId={selectedCampaignId}
         dateFrom={dateRange.from}
         dateTo={dateRange.to}

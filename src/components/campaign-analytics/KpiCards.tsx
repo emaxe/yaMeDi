@@ -4,8 +4,8 @@ import { MetricDelta } from '../ui/MetricDelta'
 import { SkeletonCard } from '../ui/Skeleton'
 import { StatCard } from '../ui/StatCard'
 
-interface CampaignKpiCardsProps {
-  campaignId: number
+interface KpiCardsProps {
+  campaignId: number | 'all'
   dateFrom: string
   dateTo: string
   sandbox?: boolean
@@ -63,7 +63,7 @@ function calculateKpiTotals(rows: Array<Record<KpiKey, number>> | undefined): Kp
   return totals
 }
 
-export function CampaignKpiCards({ campaignId, dateFrom, dateTo, sandbox = false }: CampaignKpiCardsProps) {
+export function KpiCards({ campaignId, dateFrom, dateTo, sandbox = false }: KpiCardsProps) {
   const { current, previous } = useCampaignPerformanceComparison(
     campaignId,
     { from: dateFrom, to: dateTo },
