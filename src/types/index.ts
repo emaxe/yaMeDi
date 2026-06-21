@@ -48,12 +48,14 @@ export const countersResponseSchema = z.object({
 })
 
 export interface MetricaRow {
-  dimensions: Array<{ name: string; id?: string }>
+  dimensions: Array<{ name: string | null; id?: string | null }>
   metrics: number[]
 }
 
 export const metricaRowSchema = z.object({
-  dimensions: z.array(z.object({ name: z.string(), id: z.string().optional() })),
+  dimensions: z.array(
+    z.object({ name: z.string().nullable(), id: z.string().nullable().optional() })
+  ),
   metrics: z.array(z.number()),
 })
 
@@ -231,3 +233,35 @@ export type WidgetData = {
   metrics: string[]
   dimensions: string[]
 }
+
+export interface OperationalProjectConfig {
+  id: string
+  name: string
+  counterId: number
+  directClientLogin: string
+  /** Имя метрики покупок в Метрике. По умолчанию 'ym:s:ecommercePurchases'. */
+  purchasesMetric: string
+  /** Имя метрики добавления в корзину. По умолчанию 'ym:s:ecommerceAddToCart'. */
+  addToCartMetric: string
+  /** ID цели «Добавлено в корзину». Если задан вместе с orderGoalId, C1–C3 строятся единообразно на целях. */
+  cartGoalId?: number
+  /** ID цели «Оформлен заказ». Если задан вместе с cartGoalId, C1–C3 строятся единообразно на целях. */
+  orderGoalId?: number
+  /** ID цели «Собрано контактов». */
+  contactGoalId?: number
+  /** Дополнительные рекламные кабинеты, расходы которых суммируются в строку «Бюджет». */
+  extraAdCosts?: { name: string; clientLogin: string }[]
+}
+
+export const operationalProjectConfigSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  counterId: z.number(),
+  directClientLogin: z.string(),
+  purchasesMetric: z.string().default('ym:s:ecommercePurchases'),
+  addToCartMetric: z.string().default('ym:s:ecommerceAddToCart'),
+  cartGoalId: z.number().optional(),
+  orderGoalId: z.number().optional(),
+  contactGoalId: z.number().optional(),
+  extraAdCosts: z.array(z.object({ name: z.string(), clientLogin: z.string() })).optional(),
+})

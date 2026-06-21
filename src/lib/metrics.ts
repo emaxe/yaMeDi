@@ -6,14 +6,28 @@ export const METRIC_NAMES: Record<string, string> = {
   'ym:s:bounceRate': 'Отказы',
   'ym:s:pageDepth': 'Глубина просмотра',
   'ym:s:avgVisitDurationSeconds': 'Среднее время',
-  'ym:s:goalReaches': 'Достижения целей',
+  'ym:s:goalReaches': 'Достижения цели',
   'ym:s:conversionRate': 'Конверсия',
   'ym:pv:pageviews': 'Просмотры',
   'ym:pv:users': 'Посетители',
+  'ym:s:revenue': 'Выручка',
+  'ym:s:ecommerceRevenue': 'Выручка',
+  'ym:s:ecommercePurchases': 'Покупки',
+  'ym:s:purchases': 'Покупки',
+  'ym:s:orders': 'Заказы',
+  'ym:s:ecommerceAddToCart': 'Добавления в корзину',
+  'ym:s:addToCart': 'Добавления в корзину',
+  'ym:s:trafficSource': 'Источник трафика',
 }
 
 export function getMetricName(metric: string): string {
-  return METRIC_NAMES[metric] ?? metric.replace(/^ym:s:/, '')
+  if (METRIC_NAMES[metric]) {
+    return METRIC_NAMES[metric]
+  }
+  if (/^ym:s:goalReaches\d+$/.test(metric) || /^ym:s:goal\d+reaches$/.test(metric)) {
+    return METRIC_NAMES['ym:s:goalReaches']
+  }
+  return metric.replace(/^ym:s:/, '')
 }
 
 export function formatMetricValue(value: number, metric?: string): string {
@@ -23,6 +37,20 @@ export function formatMetricValue(value: number, metric?: string): string {
   }
   if (metric?.includes('Duration') || metric?.includes('Seconds')) {
     return formatDuration(value)
+  }
+  if (metric === 'ym:s:revenue' || metric === 'ym:s:ecommerceRevenue') {
+    return `${value.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} ₽`
+  }
+  if (
+    metric?.includes('Purchases') ||
+    metric?.includes('purchases') ||
+    metric?.includes('orders') ||
+    metric?.includes('AddToCart') ||
+    metric?.includes('addToCart') ||
+    /^ym:s:goalReaches\d+$/.test(metric ?? '') ||
+    /^ym:s:goal\d+reaches$/.test(metric ?? '')
+  ) {
+    return Math.round(value).toLocaleString('ru-RU')
   }
   return value.toLocaleString('ru-RU', { maximumFractionDigits: 2 })
 }

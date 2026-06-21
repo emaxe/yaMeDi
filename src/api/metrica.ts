@@ -150,6 +150,104 @@ export function getReferrers(token: string, counterId: number, dateFrom: string,
   return getStats(token, counterId, dateFrom, dateTo, 'ym:s:visits,ym:s:users', 'ym:s:referer', 20)
 }
 
+export function getEcommerceSummary(
+  token: string,
+  counterId: number,
+  dateFrom: string,
+  dateTo: string,
+  purchasesMetric = 'ym:s:ecommercePurchases'
+): Promise<MetricaData> {
+  return getStats(token, counterId, dateFrom, dateTo, `ym:s:ecommerceRevenue,${purchasesMetric}`, 'ym:s:date', 1000)
+}
+
+export function getSourceEcommerceSummary(
+  token: string,
+  counterId: number,
+  dateFrom: string,
+  dateTo: string,
+  purchasesMetric = 'ym:s:ecommercePurchases'
+): Promise<MetricaData> {
+  return getStats(
+    token,
+    counterId,
+    dateFrom,
+    dateTo,
+    `ym:s:ecommerceRevenue,${purchasesMetric}`,
+    'ym:s:sourceEngine',
+    1000
+  )
+}
+
+export function getDailySourceEcommerceSummary(
+  token: string,
+  counterId: number,
+  dateFrom: string,
+  dateTo: string,
+  purchasesMetric = 'ym:s:ecommercePurchases'
+): Promise<MetricaData> {
+  return getStats(
+    token,
+    counterId,
+    dateFrom,
+    dateTo,
+    `ym:s:ecommerceRevenue,${purchasesMetric}`,
+    'ym:s:date,ym:s:sourceEngine',
+    1000
+  )
+}
+
+export function getDailyOrganicSummary(
+  token: string,
+  counterId: number,
+  dateFrom: string,
+  dateTo: string,
+  purchasesMetric = 'ym:s:ecommercePurchases'
+): Promise<MetricaData> {
+  return getStats(
+    token,
+    counterId,
+    dateFrom,
+    dateTo,
+    `ym:s:ecommerceRevenue,${purchasesMetric},ym:s:visits`,
+    'ym:s:date,ym:s:trafficSource',
+    1000
+  )
+}
+
+export interface FunnelSummaryConfig {
+  purchasesMetric: string
+  addToCartMetric: string
+  cartGoalId?: number
+  orderGoalId?: number
+}
+
+function goalMetricName(goalId: number): string {
+  return `ym:s:goal${goalId}reaches`
+}
+
+export function getFunnelSummary(
+  token: string,
+  counterId: number,
+  dateFrom: string,
+  dateTo: string,
+  config: FunnelSummaryConfig
+): Promise<MetricaData> {
+  const useGoals = config.cartGoalId && config.orderGoalId
+  const cartMetric = useGoals ? goalMetricName(config.cartGoalId!) : config.addToCartMetric
+  const orderMetric = useGoals ? goalMetricName(config.orderGoalId!) : config.purchasesMetric
+  return getStats(token, counterId, dateFrom, dateTo, `ym:s:visits,${cartMetric},${orderMetric}`, 'ym:s:date', 1000)
+}
+
+export function getContactLeads(
+  token: string,
+  counterId: number,
+  dateFrom: string,
+  dateTo: string,
+  contactGoalId: number
+): Promise<MetricaData> {
+  return getStats(token, counterId, dateFrom, dateTo, goalMetricName(contactGoalId), 'ym:s:date', 1000)
+}
+
 export function useTrafficSummary(counterId: number | undefined, dateFrom: string, dateTo: string) {
   const { token } = useAuth()
   return useQuery({

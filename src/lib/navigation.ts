@@ -14,6 +14,7 @@ export const navigationItems: NavItem[] = [
   { id: 'campaigns', label: 'Кампании', icon: Target, section: 'frequent' },
   { id: 'company-analytics', label: 'Аналитика кампании', icon: TrendingUp, section: 'frequent' },
   { id: 'overall-analytics', label: 'Общая аналитика', icon: TrendingUp, section: 'frequent' },
+  { id: 'operational-report', label: 'Операционный отчёт', icon: BarChart3, section: 'frequent' },
   { id: 'token', label: 'Токен', icon: Key, section: 'rare' },
   { id: 'diagnostics', label: 'Диагностика', icon: Activity, section: 'rare' },
 ]

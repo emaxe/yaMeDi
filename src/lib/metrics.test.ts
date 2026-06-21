@@ -12,6 +12,30 @@ describe('metrics', () => {
     it('returns stripped name for unknown metrics', () => {
       expect(getMetricName('ym:s:custom')).toBe('custom')
     })
+
+    it('returns name for revenue', () => {
+      expect(getMetricName('ym:s:revenue')).toBe('Выручка')
+    })
+
+    it('returns name for purchases', () => {
+      expect(getMetricName('ym:s:ecommercePurchases')).toBe('Покупки')
+      expect(getMetricName('ym:s:purchases')).toBe('Покупки')
+      expect(getMetricName('ym:s:orders')).toBe('Заказы')
+    })
+
+    it('returns name for add to cart', () => {
+      expect(getMetricName('ym:s:ecommerceAddToCart')).toBe('Добавления в корзину')
+      expect(getMetricName('ym:s:addToCart')).toBe('Добавления в корзину')
+    })
+
+    it('returns name for goal reaches with id', () => {
+      expect(getMetricName('ym:s:goalReaches123')).toBe('Достижения цели')
+      expect(getMetricName('ym:s:goal123reaches')).toBe('Достижения цели')
+    })
+
+    it('returns name for ecommerce revenue', () => {
+      expect(getMetricName('ym:s:ecommerceRevenue')).toBe('Выручка')
+    })
   })
 
   describe('formatMetricValue', () => {
@@ -30,6 +54,24 @@ describe('metrics', () => {
 
     it('returns dash for non-finite values', () => {
       expect(formatMetricValue(NaN)).toBe('—')
+    })
+
+    it('formats revenue as currency', () => {
+      const formatted = formatMetricValue(1234567.89, 'ym:s:revenue').replace(/\s/g, ' ')
+      expect(formatted).toBe('1 234 567,89 ₽')
+      const formattedEcommerce = formatMetricValue(1234567.89, 'ym:s:ecommerceRevenue').replace(/\s/g, ' ')
+      expect(formattedEcommerce).toBe('1 234 567,89 ₽')
+    })
+
+    it('formats purchases and addToCart as integers', () => {
+      const purchases = formatMetricValue(1234, 'ym:s:ecommercePurchases').replace(/\s/g, ' ')
+      const addToCart = formatMetricValue(1234, 'ym:s:ecommerceAddToCart').replace(/\s/g, ' ')
+      const goalReachesOld = formatMetricValue(1234, 'ym:s:goalReaches123').replace(/\s/g, ' ')
+      const goalReaches = formatMetricValue(1234, 'ym:s:goal123reaches').replace(/\s/g, ' ')
+      expect(purchases).toBe('1 234')
+      expect(addToCart).toBe('1 234')
+      expect(goalReachesOld).toBe('1 234')
+      expect(goalReaches).toBe('1 234')
     })
   })
 

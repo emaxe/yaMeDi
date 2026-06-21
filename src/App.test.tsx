@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
+import App from './App'
 import type { AppState } from './context/app'
 import {
   createMockAppState,
@@ -10,7 +11,15 @@ import {
   TestQueryProvider,
 } from './test/mocks'
 
-import App from './App'
+
+vi.mock('./hooks/useOperationalReport', () => ({
+  useOperationalReport: vi.fn(() => ({
+    data: undefined,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+}))
 
 const authState = createMockAuthState({ token: 'token', clientLogin: 'login', hasToken: true })
 
@@ -55,5 +64,18 @@ describe('App', () => {
     const campaignsNav = screen.getAllByRole('button', { name: 'Кампании' })[0]
     await userEvent.click(campaignsNav)
     expect(setActiveTab).toHaveBeenCalledWith('campaigns')
+  })
+
+  it('renders operational report dashboard', async () => {
+    render(<App />, { wrapper: createWrapper(createMockAppState({ activeTab: 'operational-report' })) })
+    expect(await screen.findByRole('heading', { name: 'Операционный отчёт' })).toBeInTheDocument()
+  })
+
+  it('navigates to operational report tab from sidebar', async () => {
+    const setActiveTab = vi.fn()
+    render(<App />, { wrapper: createWrapper(createMockAppState({ setActiveTab })) })
+    const operationalReportNav = screen.getAllByRole('button', { name: 'Операционный отчёт' })[0]
+    await userEvent.click(operationalReportNav)
+    expect(setActiveTab).toHaveBeenCalledWith('operational-report')
   })
 })
