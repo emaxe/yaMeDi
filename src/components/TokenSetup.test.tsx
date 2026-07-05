@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-import { createMockAuthState, MockAuthProvider } from '../test/mocks'
+import { createMockAuthState, MockAuthProvider, TestQueryProvider } from '../test/mocks'
 
 import TokenSetup from './TokenSetup'
 
@@ -16,8 +16,11 @@ beforeAll(() => {
     getClientLogin: vi.fn(),
     setClientLogin: vi.fn(),
     deleteClientLogin: vi.fn(),
+    getAuditChecklist: vi.fn(),
+    setAuditChecklist: vi.fn(),
     onMainProcessMessage: vi.fn(() => vi.fn()),
     directFetch: vi.fn(),
+    uonFetch: vi.fn(),
   }
 })
 
@@ -25,11 +28,17 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+afterAll(() => {
+  delete (window as Partial<Window>).electronAPI
+})
+
 function renderTokenSetup(state = createMockAuthState()) {
   return render(
-    <MockAuthProvider state={state}>
-      <TokenSetup />
-    </MockAuthProvider>
+    <TestQueryProvider>
+      <MockAuthProvider state={state}>
+        <TokenSetup />
+      </MockAuthProvider>
+    </TestQueryProvider>
   )
 }
 

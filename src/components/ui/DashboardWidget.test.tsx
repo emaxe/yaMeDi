@@ -37,7 +37,7 @@ describe('DashboardWidget', () => {
     expect(retry).toHaveBeenCalled()
   })
 
-  it('calls export handler when export button is clicked', async () => {
+  it('calls export handler with csv format when csv option is clicked', async () => {
     const user = userEvent.setup()
     const exportFn = vi.fn()
     render(
@@ -45,7 +45,21 @@ describe('DashboardWidget', () => {
         <div>Content</div>
       </DashboardWidget>
     )
-    await user.click(screen.getByRole('button', { name: /скачать csv/i }))
-    expect(exportFn).toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: /скачать данные/i }))
+    await user.click(screen.getByRole('menuitem', { name: /csv/i }))
+    expect(exportFn).toHaveBeenCalledWith('csv')
+  })
+
+  it('calls export handler with xlsx format when xlsx option is clicked', async () => {
+    const user = userEvent.setup()
+    const exportFn = vi.fn()
+    render(
+      <DashboardWidget title="Test Widget" isLoading={false} onExport={exportFn}>
+        <div>Content</div>
+      </DashboardWidget>
+    )
+    await user.click(screen.getByRole('button', { name: /скачать данные/i }))
+    await user.click(screen.getByRole('menuitem', { name: /xlsx/i }))
+    expect(exportFn).toHaveBeenCalledWith('xlsx')
   })
 })

@@ -1,9 +1,10 @@
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, AlertTriangle, Download } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { OPERATIONAL_PROJECTS } from '../config/operationalProjects'
 import { useOperationalReport } from '../hooks/useOperationalReport'
-import { exportToCsv } from '../lib/csvExport'
+import { exportData, type ExportFormat } from '../lib/dataExport'
+import { exportElementToPdf } from '../lib/pdfExport'
 import { getDefaultDates, isValidDateRange } from '../lib/dateRanges'
 import type { DateRange } from '../types'
 
@@ -27,25 +28,27 @@ function formatPercentage(value: number): string {
 // Каждая метрика становится строкой; её `format` применяется заранее,
 // чтобы переиспользуемые DataTable/MobileListCard/exportToCsv выводили
 // уже отформатированные значения без правок этих компонентов.
+//
+// C1/C2/C3 временно скрыты — см. docs/plan/plan.md (Фаза 3, задача 3.1).
 const METRIC_ROWS: { key: string; label: string; format?: (value: number) => string }[] = [
-  { key: 'revenue', label: 'Выручка', format: formatCurrency },
-  { key: 'orders', label: 'Заказы' },
   { key: 'visits', label: 'Визиты' },
+  { key: 'totalCost', label: 'Бюджет', format: formatCurrency },
+  { key: 'cpa', label: 'CPA', format: formatCurrency },
+  { key: 'drr', label: 'ДРР', format: formatPercentage },
+  { key: 'romi', label: 'ROMI', format: formatPercentage },
+  { key: 'averageCheck', label: 'Ср. чек', format: formatCurrency },
+  { key: 'leads', label: 'Лиды' },
+  { key: 'leadRequests', label: 'Заявки' },
+  { key: 'cplRequest', label: 'CPL заявки', format: formatCurrency },
+  { key: 'cplQualified', label: 'CPL квал. лида', format: formatCurrency },
   { key: 'directRevenue', label: 'Direct выручка', format: formatCurrency },
   { key: 'directOrders', label: 'Direct заказы' },
   { key: 'directCost', label: 'Direct расход', format: formatCurrency },
   { key: 'seoRevenue', label: 'SEO выручка', format: formatCurrency },
   { key: 'seoOrders', label: 'SEO заказы' },
   { key: 'seoVisits', label: 'SEO трафик' },
-  { key: 'totalCost', label: 'Бюджет', format: formatCurrency },
-  { key: 'cpa', label: 'CPA', format: formatCurrency },
-  { key: 'drr', label: 'ДРР', format: formatPercentage },
-  { key: 'romi', label: 'ROMI', format: formatPercentage },
-  { key: 'averageCheck', label: 'Ср. чек', format: formatCurrency },
-  { key: 'c1', label: 'C1', format: formatPercentage },
-  { key: 'c2', label: 'C2', format: formatPercentage },
-  { key: 'c3', label: 'C3', format: formatPercentage },
-  { key: 'leads', label: 'Лиды' },
+  { key: 'revenue', label: 'Выручка', format: formatCurrency },
+  { key: 'orders', label: 'Заказы' },
 ]
 
 export default function OperationalReport() {
@@ -83,25 +86,29 @@ export default function OperationalReport() {
     })
   }, [periods])
 
-  const handleExport = () => {
+  const handleExport = (format: ExportFormat) => {
     if (!data || transposedRows.length === 0) return
     const headers = displayColumns.map((column) => ({ key: column.key, label: column.label }))
     const filename = `operational-report-${projectId}-${dates.from}-${dates.to}.csv`
-    exportToCsv(filename, headers, transposedRows)
+    exportData(filename, headers, transposedRows, format)
+  }
+
+  const handleExportPdf = () => {
+    exportElementToPdf('operational-report', `Операционный_отчет_${projectId}.pdf`)
   }
 
   return (
-    <div className="space-y-6" data-testid="operational-report-page">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="flex items-center gap-3">
+    <div id="operational-report" className="space-y-6 bg-background pb-8" data-testid="operational-report-page">
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3 shrink-0">
           <BarChart3 className="w-6 h-6 text-primary" aria-hidden="true" />
           <h2 className="text-headline-lg text-on-background">Операционный отчёт</h2>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 no-export flex-wrap xl:justify-end">
           <select
             value={projectId}
             onChange={(event) => setProjectId(event.target.value)}
-            className="h-9 rounded-sm bg-surface-elevated border border-outline px-3 text-body-md text-on-background focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus"
+            className="h-10 rounded-lg bg-surface-elevated border border-outline px-3 text-body-md text-on-background focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-focus"
             aria-label="Проект"
           >
             {OPERATIONAL_PROJECTS.map((projectOption) => (
@@ -111,6 +118,13 @@ export default function OperationalReport() {
             ))}
           </select>
           <DateRangePicker value={dates} onChange={setDates} />
+          <button
+            onClick={handleExportPdf}
+            className="flex items-center justify-center gap-2 h-10 px-4 text-sm font-semibold text-primary bg-primary/10 border border-primary/20 rounded-lg hover:bg-primary/20 transition w-full sm:w-auto whitespace-nowrap"
+          >
+            <Download className="w-4 h-4 shrink-0" />
+            Получить отчет
+          </button>
         </div>
       </div>
 
@@ -121,11 +135,25 @@ export default function OperationalReport() {
         />
       )}
 
+      {datesValid && data?.uonError && (
+        <div
+          className="rounded-lg border border-warning/30 bg-warning/10 p-4 flex items-center gap-3 text-on-surface"
+          role="alert"
+        >
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 text-warning" aria-hidden="true" />
+          <span className="flex-1 text-body-md">
+            CRM (U-ON) недоступен — «CPL квал. лида» рассчитан по резервной цели Метрики. {data.uonError}
+          </span>
+        </div>
+      )}
+
       {datesValid && (
         <DashboardWidget
           title="Операционные показатели"
           subtitle={
-            project ? `${project.name} · ${dates.from} – ${dates.to}` : `${dates.from} – ${dates.to}`
+            project
+              ? `${project.name} · ${dates.from} – ${dates.to}${project.uonApiKey ? ' · квал. лиды: CRM' : ''}`
+              : `${dates.from} – ${dates.to}`
           }
           isLoading={isLoading && !data}
           error={error as Error | null}

@@ -19,6 +19,16 @@ interface SecureStoreSchema {
   encryptedClientLogin?: string
 }
 
+interface AuditStoreSchema {
+  items?: Array<{
+    id: string
+    label: string
+    lastCheckedDate: string | null
+    status: string
+    intervalDays: number
+  }>
+}
+
 interface DirectFetchOptions {
   method?: 'GET' | 'POST'
   headers?: Record<string, string>
@@ -27,8 +37,10 @@ interface DirectFetchOptions {
 }
 
 const DIRECT_FETCH_TIMEOUT = 10000
+const UON_FETCH_TIMEOUT = 30000
 
 const secureStore = new Store<SecureStoreSchema>({ name: 'yandex-metrics-auth' })
+const auditStore = new Store<AuditStoreSchema>({ name: 'yandex-metrics-audit' })
 
 const TRUSTED_EXTERNAL_DOMAINS = new Set([
   'oauth.yandex.ru',
@@ -36,13 +48,14 @@ const TRUSTED_EXTERNAL_DOMAINS = new Set([
   'api-metrika.yandex.net',
   'api.direct.yandex.com',
   'api-sandbox.direct.yandex.com',
+  'api.u-on.ru',
 ])
 
 const CSP_VALUE = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "connect-src 'self' https://oauth.yandex.ru https://login.yandex.ru https://api-metrika.yandex.net https://api.direct.yandex.com https://api-sandbox.direct.yandex.com ws://localhost:* ws://127.0.0.1:* wss://localhost:* wss://127.0.0.1:*",
+  "connect-src 'self' https://oauth.yandex.ru https://login.yandex.ru https://api-metrika.yandex.net https://api.direct.yandex.com https://api-sandbox.direct.yandex.com https://api.u-on.ru ws://localhost:* ws://127.0.0.1:* wss://localhost:* wss://127.0.0.1:*",
   "img-src 'self' data:",
   "font-src 'self'",
   "object-src 'none'",
@@ -258,6 +271,14 @@ ipcMain.handle('secure-store:delete-client-login', () => {
   secureStore.delete('encryptedClientLogin')
 })
 
+ipcMain.handle('audit:get', () => {
+  return auditStore.get('items', [])
+})
+
+ipcMain.handle('audit:set', (_, items: AuditStoreSchema['items']) => {
+  auditStore.set('items', items)
+})
+
 ipcMain.handle('direct:fetch', async (_, url: string, options: DirectFetchOptions) => {
   console.log('[direct:fetch] ipc called', url, options.method ?? 'GET')
   console.log('[direct:fetch] headers', options.headers)
@@ -281,6 +302,29 @@ ipcMain.handle('direct:fetch', async (_, url: string, options: DirectFetchOption
     return { status: response.status, body }
   } catch (err) {
     console.error('[direct:fetch] Network error:', err)
+    throw err
+  }
+})
+
+ipcMain.handle('uon:fetch', async (_, url: string, options: DirectFetchOptions) => {
+  if (!isTrustedExternalUrl(url)) {
+    throw new Error(`Blocked uon fetch to untrusted URL: ${url}`)
+  }
+
+  const timeout = options.timeout ?? UON_FETCH_TIMEOUT
+  const signal = AbortSignal.timeout(timeout)
+
+  try {
+    const response = await fetch(url, {
+      method: options.method ?? 'GET',
+      headers: options.headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      signal,
+    })
+    const body = await response.text()
+    return { status: response.status, body }
+  } catch (err) {
+    console.error('[uon:fetch] Network error:', err)
     throw err
   }
 })

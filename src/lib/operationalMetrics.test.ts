@@ -1,6 +1,7 @@
 import {
   calculateAverageCheck,
   calculateCpa,
+  calculateCpl,
   calculateDrr,
   calculateRomi,
   calculateC1,
@@ -26,6 +27,16 @@ describe('calculateCpa', () => {
 
   it('returns 0 when conversions are 0', () => {
     expect(calculateCpa(50000, 0)).toBe(0)
+  })
+})
+
+describe('calculateCpl', () => {
+  it('returns cost divided by count', () => {
+    expect(calculateCpl(50000, 25)).toBe(2000)
+  })
+
+  it('returns 0 when count is 0', () => {
+    expect(calculateCpl(50000, 0)).toBe(0)
   })
 })
 
@@ -96,6 +107,7 @@ describe('calculateOperationalMetrics', () => {
       seoVisits: 10_000,
       cartEvents: 275,
       leads: 500,
+      leadRequests: 800,
     }
 
     const result = calculateOperationalMetrics(raw)
@@ -118,6 +130,9 @@ describe('calculateOperationalMetrics', () => {
     expect(result.c2).toBe(0.01)
     expect(result.c3).toBe(100 / 275)
     expect(result.leads).toBe(raw.leads)
+    expect(result.leadRequests).toBe(raw.leadRequests)
+    expect(result.cplRequest).toBe(100_000 / 800)
+    expect(result.cplQualified).toBe(100_000 / 500)
   })
 
   it('handles zero values without division errors', () => {
@@ -136,6 +151,7 @@ describe('calculateOperationalMetrics', () => {
       seoVisits: 0,
       cartEvents: 0,
       leads: 0,
+      leadRequests: 0,
     }
 
     const result = calculateOperationalMetrics(raw)
@@ -150,5 +166,7 @@ describe('calculateOperationalMetrics', () => {
     expect(result.c1).toBe(0)
     expect(result.c2).toBe(0)
     expect(result.c3).toBe(0)
+    expect(result.cplRequest).toBe(0)
+    expect(result.cplQualified).toBe(0)
   })
 })

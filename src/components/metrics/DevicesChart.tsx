@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { getDevices, useStatsComparison } from '../../api/metrica'
 import { buildComparisonData, transformMetricaData } from '../../lib/chartData'
 import { PIE_COLORS, tooltipStyle, labelStyle, pieLabel } from '../../lib/chartTheme'
-import { exportToCsv } from '../../lib/csvExport'
+import { exportData, type ExportFormat } from '../../lib/dataExport'
 import { formatMetricValue, getMetricName } from '../../lib/metrics'
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { DashboardWidget } from '../ui/DashboardWidget'
@@ -29,15 +29,16 @@ export function DevicesChart({ counterId, dateFrom, dateTo }: DevicesChartProps)
   const previousData = transformMetricaData(previous.data, 'name')
   const data = buildComparisonData(currentData, previousData, 'name', [METRIC])
 
-  function handleExport() {
+  function handleExport(format: ExportFormat) {
     if (!currentData.length) return
-    exportToCsv(
+    exportData(
       `devices-${dateFrom}-${dateTo}.csv`,
       [
         { key: 'name', label: 'Устройство' },
         { key: METRIC, label: getMetricName(METRIC) },
       ],
-      currentData
+      currentData,
+      format
     )
   }
 

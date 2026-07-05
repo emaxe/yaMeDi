@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { getRegions, useStatsComparison } from '../../api/metrica'
 import { buildComparisonData, transformMetricaData } from '../../lib/chartData'
 import { CHART_COLORS, gridStyle, labelStyle, tooltipStyle, axisStroke, tickStyle } from '../../lib/chartTheme'
-import { exportToCsv } from '../../lib/csvExport'
+import { exportData, type ExportFormat } from '../../lib/dataExport'
 import { formatMetricValue, getMetricName } from '../../lib/metrics'
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { MobileListCard } from '../mobile/MobileListCard'
@@ -30,16 +30,17 @@ export function GeoChart({ counterId, dateFrom, dateTo }: GeoChartProps) {
   const previousData = transformMetricaData(previous.data, 'name').slice(0, 10)
   const data = buildComparisonData(currentData, previousData, 'name', [METRIC])
 
-  function handleExport() {
+  function handleExport(format: ExportFormat) {
     if (!currentData.length) return
-    exportToCsv(
+    exportData(
       `regions-${dateFrom}-${dateTo}.csv`,
       [
         { key: 'name', label: 'Регион' },
         { key: 'ym:s:visits', label: getMetricName('ym:s:visits') },
         { key: 'ym:s:users', label: getMetricName('ym:s:users') },
       ],
-      currentData
+      currentData,
+      format
     )
   }
 

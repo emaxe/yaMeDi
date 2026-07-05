@@ -21,6 +21,14 @@ vi.mock('./hooks/useOperationalReport', () => ({
   })),
 }))
 
+vi.mock('./hooks/useAuditChecklist', () => ({
+  useAuditChecklist: vi.fn(() => ({
+    items: [],
+    isLoading: false,
+    updateItem: vi.fn(),
+  })),
+}))
+
 const authState = createMockAuthState({ token: 'token', clientLogin: 'login', hasToken: true })
 
 function createWrapper(appState: AppState = createMockAppState()) {
@@ -69,6 +77,19 @@ describe('App', () => {
   it('renders operational report dashboard', async () => {
     render(<App />, { wrapper: createWrapper(createMockAppState({ activeTab: 'operational-report' })) })
     expect(await screen.findByRole('heading', { name: 'Операционный отчёт' })).toBeInTheDocument()
+  })
+
+  it('renders audit checklist page', async () => {
+    render(<App />, { wrapper: createWrapper(createMockAppState({ activeTab: 'audit' })) })
+    expect(await screen.findByRole('heading', { name: 'Аудит аналитики' })).toBeInTheDocument()
+  })
+
+  it('navigates to audit tab from sidebar', async () => {
+    const setActiveTab = vi.fn()
+    render(<App />, { wrapper: createWrapper(createMockAppState({ setActiveTab })) })
+    const auditNav = screen.getAllByRole('button', { name: 'Аудит аналитики' })[0]
+    await userEvent.click(auditNav)
+    expect(setActiveTab).toHaveBeenCalledWith('audit')
   })
 
   it('navigates to operational report tab from sidebar', async () => {

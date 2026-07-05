@@ -14,6 +14,8 @@ describe('operationalProjects', () => {
     expect(project?.name).toBe('Курорт 26')
     expect(project?.purchasesMetric).toBe('ym:s:ecommercePurchases')
     expect(project?.cartGoalId).toBe(249520697)
+    expect(project?.leadGoalIds).toEqual([30950899, 297174772, 362291918, 362292248, 344605174])
+    expect(project?.uonApiKey).toBe('IT0ru9zn3VS7tSx044SJ')
   })
 
   it('uses unified goal-based funnel for all projects', () => {

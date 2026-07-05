@@ -3,10 +3,12 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import {
   adReportRowSchema,
+  agencyClientsResponseSchema,
   campaignsResponseSchema,
   campaignPerformanceReportRowSchema,
   searchTermReportRowSchema,
   type AdReportRow,
+  type AgencyClient,
   type Campaign,
   type CampaignPerformanceReportRow,
   type SearchTermReportRow,
@@ -60,6 +62,34 @@ export function useCampaigns(sandbox: boolean) {
   return useQuery({
     queryKey: ['campaigns', sandbox, clientLogin],
     queryFn: () => getCampaigns(token!, clientLogin, sandbox),
+    enabled: !!token,
+  })
+}
+
+export async function getAgencyClients(token: string): Promise<AgencyClient[]> {
+  const url = `${API_CONFIG.direct.baseUrl}/agencyclients`
+  const body = {
+    method: 'get',
+    params: {
+      SelectionCriteria: {},
+      FieldNames: ['Login', 'Type', 'Archived'],
+    },
+  }
+
+  const data = await fetchJson<unknown>(
+    url,
+    { method: 'POST', headers: getDirectHeaders(token), body },
+    'Клиенты агентства'
+  )
+  const parsed = agencyClientsResponseSchema.parse(data)
+  return parsed.result?.Clients ?? []
+}
+
+export function useAgencyClients() {
+  const { token } = useAuth()
+  return useQuery({
+    queryKey: ['agencyClients'],
+    queryFn: () => getAgencyClients(token!),
     enabled: !!token,
   })
 }

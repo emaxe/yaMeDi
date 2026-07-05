@@ -4,7 +4,7 @@ import { getTrafficSummary, useStatsComparison } from '../../api/metrica'
 import { alignByIndex, transformMetricaData } from '../../lib/chartData'
 import { getTotalsByMetric } from '../../lib/chartData'
 import { CHART_COLORS, gridStyle, labelStyle, tooltipStyle, axisStroke, tickStyle, previousPeriodColor, legendStyle } from '../../lib/chartTheme'
-import { exportToCsv } from '../../lib/csvExport'
+import { exportData, type ExportFormat } from '../../lib/dataExport'
 import { getMetricName } from '../../lib/metrics'
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { DashboardWidget } from '../ui/DashboardWidget'
@@ -31,12 +31,13 @@ export function TrafficChart({ counterId, dateFrom, dateTo }: TrafficChartProps)
   const previousData = transformMetricaData(previous.data, 'date')
   const data = alignByIndex(currentData, previousData, METRICS, 'date')
 
-  function handleExport() {
+  function handleExport(format: ExportFormat) {
     if (!currentData.length) return
-    exportToCsv(
+    exportData(
       `traffic-${dateFrom}-${dateTo}.csv`,
       [{ key: 'date', label: 'Дата' }, ...METRICS.map((m) => ({ key: m, label: getMetricName(m) }))],
-      currentData
+      currentData,
+      format
     )
   }
 

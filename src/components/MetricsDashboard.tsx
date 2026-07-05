@@ -1,9 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { LineChart as LineChartIcon, RefreshCw } from 'lucide-react'
+import { LineChart as LineChartIcon, RefreshCw, Download } from 'lucide-react'
 import { useState } from 'react'
 
 import { useApp } from '../hooks/useApp'
 import { isValidDateRange } from '../lib/dateRanges'
+import { exportElementToPdf } from '../lib/pdfExport'
 
 import { AudienceChart } from './metrics/AudienceChart'
 import { BrowsersChart } from './metrics/BrowsersChart'
@@ -42,6 +43,10 @@ export default function MetricsDashboard() {
 
   const dates = dateRange
 
+  const handleExportPdf = () => {
+    exportElementToPdf('metrics-dashboard', `Графики_Метрики_${selectedCounter?.name || 'Отчет'}.pdf`)
+  }
+
   if (!selectedCounter) {
     return (
       <EmptyState
@@ -56,9 +61,9 @@ export default function MetricsDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
+    <div id="metrics-dashboard" className="space-y-6 bg-background pb-8">
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3 shrink-0">
           <LineChartIcon className="w-6 h-6 text-primary" aria-hidden="true" />
           <div>
             <h2 className="text-headline-lg text-on-background">Графики Метрики</h2>
@@ -67,16 +72,23 @@ export default function MetricsDashboard() {
             </p>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 no-export flex-wrap xl:justify-end">
           <DateRangePicker value={dates} onChange={setDateRange} />
+          <button
+            onClick={handleExportPdf}
+            className="flex items-center justify-center gap-2 h-10 px-4 text-sm font-semibold text-primary bg-primary/10 border border-primary/20 rounded-lg hover:bg-primary/20 transition w-full sm:w-auto whitespace-nowrap"
+          >
+            <Download className="w-4 h-4 shrink-0" />
+            Получить отчет
+          </button>
           <LoadingButton
             onClick={refetchAll}
             loading={false}
             loadingText="Загрузка..."
             disabled={!datesValid}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto h-10 px-4 rounded-lg justify-center whitespace-nowrap"
           >
-            <RefreshCw className="w-4 h-4" aria-hidden="true" />
+            <RefreshCw className="w-4 h-4 shrink-0" aria-hidden="true" />
             Загрузить
           </LoadingButton>
         </div>

@@ -248,6 +248,17 @@ export function getContactLeads(
   return getStats(token, counterId, dateFrom, dateTo, goalMetricName(contactGoalId), 'ym:s:date', 1000)
 }
 
+export function getLeadRequests(
+  token: string,
+  counterId: number,
+  dateFrom: string,
+  dateTo: string,
+  leadGoalIds: number[]
+): Promise<MetricaData> {
+  const metrics = leadGoalIds.map((id) => goalMetricName(id)).join(',')
+  return getStats(token, counterId, dateFrom, dateTo, metrics, 'ym:s:date', 1000)
+}
+
 export function useTrafficSummary(counterId: number | undefined, dateFrom: string, dateTo: string) {
   const { token } = useAuth()
   return useQuery({

@@ -1,3 +1,5 @@
+import type { AuditChecklistItem } from '../types'
+
 export interface DirectFetchOptions {
   method?: 'GET' | 'POST'
   headers?: Record<string, string>
@@ -19,7 +21,10 @@ export interface ElectronAPI {
   getClientLogin: () => Promise<string | null>
   setClientLogin: (clientLogin: string) => Promise<void>
   deleteClientLogin: () => Promise<void>
+  getAuditChecklist: () => Promise<AuditChecklistItem[] | null>
+  setAuditChecklist: (items: AuditChecklistItem[]) => Promise<void>
   directFetch: (url: string, options: DirectFetchOptions) => Promise<DirectFetchResponse>
+  uonFetch: (url: string, options: DirectFetchOptions) => Promise<DirectFetchResponse>
 }
 
 declare global {

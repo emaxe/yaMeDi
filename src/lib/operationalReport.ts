@@ -1,6 +1,6 @@
 import { eachDayOfInterval, format, getISOWeek, getISOWeekYear, parseISO, startOfISOWeek, endOfISOWeek } from 'date-fns'
 
-import type { CampaignPerformanceReportRow, DateRange, MetricaData, OperationalProjectConfig } from '../types'
+import type { CampaignPerformanceReportRow, DateRange, MetricaData, OperationalProjectConfig, UonLead } from '../types'
 
 import { calculateOperationalMetrics, type OperationalRawData } from './operationalMetrics'
 
@@ -27,6 +27,7 @@ export interface OperationalReportRow extends OperationalReportWeek {
   seoVisits: number
   cartEvents: number
   leads: number
+  leadRequests: number
   averageCheck: number
   cpa: number
   drr: number
@@ -38,11 +39,14 @@ export interface OperationalReportRow extends OperationalReportWeek {
   c1: number
   c2: number
   c3: number
+  cplRequest: number
+  cplQualified: number
 }
 
 export interface OperationalReportData {
   rows: OperationalReportRow[]
   total: OperationalReportRow
+  uonError?: string
 }
 
 const DIRECT_SOURCE_NAMES = ['yandex direct', 'яндекс.директ', 'директ', 'adwords', 'google ads']
@@ -153,6 +157,15 @@ export function aggregateDirectCost(
   return result
 }
 
+export function aggregateUonLeadsByDate(leads: UonLead[]): Map<string, number> {
+  const result = new Map<string, number>()
+  for (const lead of leads) {
+    const date = lead.dat.slice(0, 10)
+    result.set(date, (result.get(date) ?? 0) + 1)
+  }
+  return result
+}
+
 function createEmptyRaw(): OperationalRawData {
   return {
     revenue: 0,
@@ -169,6 +182,7 @@ function createEmptyRaw(): OperationalRawData {
     seoVisits: 0,
     cartEvents: 0,
     leads: 0,
+    leadRequests: 0,
   }
 }
 
@@ -187,6 +201,7 @@ function addRaw(target: OperationalRawData, source: OperationalRawData): void {
   target.seoVisits += source.seoVisits
   target.cartEvents += source.cartEvents
   target.leads += source.leads
+  target.leadRequests += source.leadRequests
 }
 
 function extractDailyTotals(data: MetricaData): Map<string, number[]> {
@@ -208,13 +223,18 @@ export function buildOperationalReportData(
   leads: MetricaData,
   sourceEcommerce: MetricaData,
   organic: MetricaData,
-  directRows: CampaignPerformanceReportRow[]
+  directRows: CampaignPerformanceReportRow[],
+  leadRequests?: MetricaData,
+  qualifiedUonLeads?: UonLead[],
+  uonError?: string
 ): OperationalReportData {
   const weeks = splitDateRangeIntoWeeks(dates)
   const ecommerceTotals = extractDailyTotals(ecommerce)
   const trafficTotals = extractDailyTotals(traffic)
   const funnelTotals = extractDailyTotals(funnel)
   const leadsTotals = extractDailyTotals(leads)
+  const leadRequestsTotals = leadRequests ? extractDailyTotals(leadRequests) : null
+  const uonLeadsTotals = qualifiedUonLeads ? aggregateUonLeadsByDate(qualifiedUonLeads) : null
   const directSourceTotals = aggregateDirectFromSource(sourceEcommerce)
   const organicTotals = aggregateOrganicFromTrafficSource(organic)
   const directCostTotals = aggregateDirectCost(directRows)
@@ -225,6 +245,7 @@ export function buildOperationalReportData(
   const cartMetricName = project.cartGoalId ? `ym:s:goal${project.cartGoalId}reaches` : project.addToCartMetric
   const cartIndex = funnel.query.metrics.indexOf(cartMetricName)
   const leadsIndex = 0
+  const leadRequestsMetricCount = leadRequests?.query.metrics.length ?? 0
 
   const totalRaw = createEmptyRaw()
 
@@ -244,9 +265,22 @@ export function buildOperationalReportData(
       if (fun && cartIndex !== -1) {
         raw.cartEvents += fun[cartIndex] ?? 0
       }
-      const ld = leadsTotals.get(dateStr)
-      if (ld) {
-        raw.leads += ld[leadsIndex] ?? 0
+      if (uonLeadsTotals) {
+        const uonLd = uonLeadsTotals.get(dateStr)
+        if (uonLd !== undefined) {
+          raw.leads += uonLd
+        }
+      } else {
+        const ld = leadsTotals.get(dateStr)
+        if (ld) {
+          raw.leads += ld[leadsIndex] ?? 0
+        }
+      }
+      const lr = leadRequestsTotals?.get(dateStr)
+      if (lr && leadRequestsMetricCount > 0) {
+        for (let i = 0; i < leadRequestsMetricCount; i++) {
+          raw.leadRequests += lr[i] ?? 0
+        }
       }
       const dir = directSourceTotals.get(dateStr)
       if (dir) {
@@ -282,5 +316,5 @@ export function buildOperationalReportData(
     days: [],
   }
 
-  return { rows, total }
+  return { rows, total, uonError }
 }

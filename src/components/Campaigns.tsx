@@ -1,8 +1,9 @@
 import { Target, ToggleLeft } from 'lucide-react'
 import { useEffect } from 'react'
 
-import { useCampaigns } from '../api/direct'
+import { useAgencyClients, useCampaigns } from '../api/direct'
 import { useApp } from '../hooks/useApp'
+import { useAuth } from '../hooks/useAuth'
 import { useDebounce } from '../hooks/useDebounce'
 
 import { Card } from './ui/Card'
@@ -22,8 +23,18 @@ function campaignStatusVariant(status: CampaignStatus) {
 
 export default function Campaigns() {
   const { directSandbox, setDirectSandbox, selectCampaign } = useApp()
+  const { clientLogin, setClientLogin, deleteClientLogin } = useAuth()
+  const { data: agencyClients, isLoading: clientsLoading, error: clientsError } = useAgencyClients()
   const debouncedSandbox = useDebounce(directSandbox, 300)
   const { data: campaigns, isLoading, isError, error, refetch, isSuccess } = useCampaigns(debouncedSandbox)
+
+  const handleSelectClientLogin = async (value: string) => {
+    if (value) {
+      await setClientLogin(value)
+    } else {
+      await deleteClientLogin()
+    }
+  }
 
   useEffect(() => {
     if (campaigns === undefined && !isLoading && !isError) {
@@ -71,6 +82,40 @@ export default function Campaigns() {
           </LoadingButton>
         </div>
       </div>
+
+      <Card className="p-4 space-y-3">
+        <div>
+          <label htmlFor="client-login" className="block text-label-sm text-on-surface-muted mb-2">
+            Client-Login (для агентств)
+          </label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <select
+              id="client-login"
+              value={clientLogin ?? ''}
+              onChange={(e) => handleSelectClientLogin(e.target.value)}
+              disabled={clientsLoading}
+              className="w-full h-9 px-3 bg-surface-elevated border border-outline rounded-sm text-body-md text-on-surface focus:outline-none focus:border-primary-focus disabled:opacity-50"
+            >
+              <option value="">
+                {clientsLoading ? 'Загрузка клиентов…' : '— Выберите логин —'}
+              </option>
+              {agencyClients?.filter((c) => !c.Archived).map((c) => (
+                <option key={c.Login} value={c.Login}>
+                  {c.Login}
+                </option>
+              ))}
+            </select>
+          </div>
+          {clientsError && (
+            <p className="mt-2 text-body-sm text-danger">
+              Не удалось загрузить список клиентов: {clientsError instanceof Error ? clientsError.message : 'ошибка сети'}
+            </p>
+          )}
+          <p className="mt-2 text-body-sm text-on-surface-muted">
+            Выберите логин клиентского аккаунта, от имени которого будут запрашиваться данные Директа.
+          </p>
+        </div>
+      </Card>
 
       {isError && <ErrorAlert message={error?.message ?? 'Неизвестная ошибка'} onRetry={() => refetch()} />}
 

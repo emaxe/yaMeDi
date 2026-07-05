@@ -60,10 +60,19 @@ function buildErrorMessage(status: number, body: string, context: string): strin
 }
 
 const DIRECT_API_HOSTS = new Set(['api.direct.yandex.com', 'api-sandbox.direct.yandex.com'])
+const UON_API_HOST = 'api.u-on.ru'
 
 function isDirectUrl(url: string): boolean {
   try {
     return DIRECT_API_HOSTS.has(new URL(url).hostname)
+  } catch {
+    return false
+  }
+}
+
+function isUonUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname === UON_API_HOST
   } catch {
     return false
   }
@@ -103,8 +112,9 @@ function buildDirectApiErrorMessage(body: DirectApiErrorBody, context: string): 
 async function performFetch(url: string, options: RequestOptions): Promise<{ status: number; body: string }> {
   const electronAPI = window.electronAPI
   const viaMain = isDirectUrl(url) && electronAPI?.directFetch
+  const viaUon = isUonUrl(url) && electronAPI?.uonFetch
   console.log(
-    `[performFetch] url=${url} isDirect=${isDirectUrl(url)} electronAPI=${typeof electronAPI} directFetch=${typeof electronAPI?.directFetch}`
+    `[performFetch] url=${url} isDirect=${isDirectUrl(url)} isUon=${isUonUrl(url)} electronAPI=${typeof electronAPI}`
   )
 
   if (viaMain) {
@@ -115,6 +125,16 @@ async function performFetch(url: string, options: RequestOptions): Promise<{ sta
       return result
     } catch (err) {
       console.error(`[performFetch] main error`, err)
+      throw err
+    }
+  }
+
+  if (viaUon) {
+    try {
+      const result = await electronAPI.uonFetch(url, options)
+      return result
+    } catch (err) {
+      console.error(`[performFetch] uon error`, err)
       throw err
     }
   }

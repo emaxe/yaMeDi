@@ -8,8 +8,10 @@ import {
   getDailySourceEcommerceSummary,
   getEcommerceSummary,
   getFunnelSummary,
+  getLeadRequests,
   getTrafficSummary,
 } from '../api/metrica'
+import { getUonLeads } from '../api/uon'
 import { MockAuthProvider, TestQueryProvider, createMockAuthState } from '../test/mocks'
 
 import { useOperationalReport } from './useOperationalReport'
@@ -22,6 +24,7 @@ vi.mock('../api/metrica', async () => {
     getTrafficSummary: vi.fn(),
     getFunnelSummary: vi.fn(),
     getContactLeads: vi.fn(),
+    getLeadRequests: vi.fn(),
     getDailySourceEcommerceSummary: vi.fn(),
     getDailyOrganicSummary: vi.fn(),
   }
@@ -34,6 +37,11 @@ vi.mock('../api/direct', async () => {
     getOverallCampaignReport: vi.fn(),
   }
 })
+
+vi.mock('../api/uon', () => ({
+  getUonLeads: vi.fn(),
+  getQualifiedLeads: vi.fn((leads) => leads),
+}))
 
 function createWrapper(token: string | null, clientLogin: string | null) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
@@ -63,6 +71,9 @@ describe('useOperationalReport', () => {
       mockMetricaData(['ym:s:visits', 'ym:s:goal249520697reaches', 'ym:s:goal3010849417reaches'], ['ym:s:date'])
     )
     vi.mocked(getContactLeads).mockResolvedValue(mockMetricaData(['ym:s:goal269264518reaches'], ['ym:s:date']))
+    vi.mocked(getLeadRequests).mockResolvedValue(
+      mockMetricaData(['ym:s:goal30950899reaches', 'ym:s:goal297174772reaches'], ['ym:s:date'])
+    )
     vi.mocked(getDailySourceEcommerceSummary).mockResolvedValue(
       mockMetricaData(['ym:s:ecommerceRevenue', 'ym:s:ecommercePurchases'], ['ym:s:date', 'ym:s:sourceEngine'])
     )
@@ -70,6 +81,7 @@ describe('useOperationalReport', () => {
       mockMetricaData(['ym:s:ecommerceRevenue', 'ym:s:ecommercePurchases', 'ym:s:visits'], ['ym:s:date', 'ym:s:trafficSource'])
     )
     vi.mocked(getOverallCampaignReport).mockResolvedValue([])
+    vi.mocked(getUonLeads).mockResolvedValue([])
 
     const { result } = renderHook(
       () => useOperationalReport('kuroort26', { from: '2024-01-01', to: '2024-01-14' }),
@@ -90,6 +102,7 @@ describe('useOperationalReport', () => {
       '2024-01-14',
       'ym:s:ecommercePurchases'
     )
+    expect(getUonLeads).toHaveBeenCalledWith('IT0ru9zn3VS7tSx044SJ', '2024-01-01', '2024-01-14')
     expect(getDailySourceEcommerceSummary).toHaveBeenCalledWith(
       'test-token',
       10849417,
@@ -113,6 +126,9 @@ describe('useOperationalReport', () => {
       mockMetricaData(['ym:s:visits', 'ym:s:goal249520697reaches'], ['ym:s:date'])
     )
     vi.mocked(getContactLeads).mockResolvedValue(mockMetricaData(['ym:s:goal269264518reaches'], ['ym:s:date']))
+    vi.mocked(getLeadRequests).mockResolvedValue(
+      mockMetricaData(['ym:s:goal30950899reaches', 'ym:s:goal297174772reaches'], ['ym:s:date'])
+    )
     vi.mocked(getDailySourceEcommerceSummary).mockResolvedValue(
       mockMetricaData(['ym:s:ecommerceRevenue', 'ym:s:ecommercePurchases'], ['ym:s:date', 'ym:s:sourceEngine'])
     )
@@ -120,6 +136,7 @@ describe('useOperationalReport', () => {
       mockMetricaData(['ym:s:ecommerceRevenue', 'ym:s:ecommercePurchases', 'ym:s:visits'], ['ym:s:date', 'ym:s:trafficSource'])
     )
     vi.mocked(getOverallCampaignReport).mockResolvedValue([])
+    vi.mocked(getUonLeads).mockResolvedValue([])
 
     const { result } = renderHook(
       () => useOperationalReport('kuroort26', { from: '2024-01-01', to: '2024-01-14' }),
@@ -130,6 +147,40 @@ describe('useOperationalReport', () => {
 
     expect(result.current.error).toBeInstanceOf(Error)
     expect(result.current.data).toBeUndefined()
+  })
+
+  it('returns report data with uonError when U-ON fetch fails', async () => {
+    vi.mocked(getEcommerceSummary).mockResolvedValue(
+      mockMetricaData(['ym:s:ecommerceRevenue', 'ym:s:ecommercePurchases'], ['ym:s:date'])
+    )
+    vi.mocked(getTrafficSummary).mockResolvedValue(mockMetricaData(['ym:s:visits'], ['ym:s:date']))
+    vi.mocked(getFunnelSummary).mockResolvedValue(
+      mockMetricaData(['ym:s:visits', 'ym:s:goal249520697reaches', 'ym:s:goal3010849417reaches'], ['ym:s:date'])
+    )
+    vi.mocked(getContactLeads).mockResolvedValue(mockMetricaData(['ym:s:goal269264518reaches'], ['ym:s:date']))
+    vi.mocked(getLeadRequests).mockResolvedValue(
+      mockMetricaData(['ym:s:goal30950899reaches', 'ym:s:goal297174772reaches'], ['ym:s:date'])
+    )
+    vi.mocked(getDailySourceEcommerceSummary).mockResolvedValue(
+      mockMetricaData(['ym:s:ecommerceRevenue', 'ym:s:ecommercePurchases'], ['ym:s:date', 'ym:s:sourceEngine'])
+    )
+    vi.mocked(getDailyOrganicSummary).mockResolvedValue(
+      mockMetricaData(['ym:s:ecommerceRevenue', 'ym:s:ecommercePurchases', 'ym:s:visits'], ['ym:s:date', 'ym:s:trafficSource'])
+    )
+    vi.mocked(getOverallCampaignReport).mockResolvedValue([])
+    vi.mocked(getUonLeads).mockRejectedValue(new Error('U-ON API unavailable'))
+
+    const { result } = renderHook(
+      () => useOperationalReport('kuroort26', { from: '2024-01-01', to: '2024-01-14' }),
+      { wrapper: createWrapper('test-token', 'kurort26-direct') }
+    )
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(result.current.error).toBeNull()
+    expect(result.current.data).toBeDefined()
+    expect(result.current.data?.rows).toHaveLength(2)
+    expect(result.current.data?.uonError).toBe('U-ON API unavailable')
   })
 
   it('falls back to global clientLogin when project has no directClientLogin', async () => {

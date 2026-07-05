@@ -11,6 +11,8 @@ export const OPERATIONAL_PROJECTS: OperationalProjectConfig[] = [
     cartGoalId: 249520697,
     orderGoalId: 3010849417,
     contactGoalId: 269264518,
+    leadGoalIds: [30950899, 297174772, 362291918, 362292248, 344605174],
+    uonApiKey: 'IT0ru9zn3VS7tSx044SJ',
   },
   {
     id: 'istok',

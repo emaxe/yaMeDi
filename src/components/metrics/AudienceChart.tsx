@@ -3,7 +3,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { getAudience, useStatsComparison } from '../../api/metrica'
 import { alignByIndex, transformMetricaData } from '../../lib/chartData'
 import { CHART_COLORS, gridStyle, labelStyle, tooltipStyle, axisStroke, tickStyle, legendStyle } from '../../lib/chartTheme'
-import { exportToCsv } from '../../lib/csvExport'
+import { exportData, type ExportFormat } from '../../lib/dataExport'
 import { formatMetricValue } from '../../lib/metrics'
 import { type ChartDataPoint } from '../../types'
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
@@ -37,16 +37,17 @@ export function AudienceChart({ counterId, dateFrom, dateTo }: AudienceChartProp
   const previousData = enrich(transformMetricaData(previous.data, 'date'))
   const data = alignByIndex(currentData, previousData, [NEW_USERS_KEY, RETURNING_USERS_KEY], 'date')
 
-  function handleExport() {
+  function handleExport(format: ExportFormat) {
     if (!currentData.length) return
-    exportToCsv(
+    exportData(
       `audience-${dateFrom}-${dateTo}.csv`,
       [
         { key: 'date', label: 'Дата' },
         { key: NEW_USERS_KEY, label: 'Новые пользователи' },
         { key: RETURNING_USERS_KEY, label: 'Вернувшиеся пользователи' },
       ],
-      currentData
+      currentData,
+      format
     )
   }
 

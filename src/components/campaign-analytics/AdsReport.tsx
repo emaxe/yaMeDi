@@ -1,6 +1,6 @@
 import { useAdReport } from '../../hooks/useCampaignReports'
+import { exportData, type ExportFormat } from '../../lib/dataExport'
 import type { AdReportRow } from '../../types'
-import { exportToCsv } from '../../lib/csvExport'
 import { MobileListCard } from '../mobile/MobileListCard'
 import { DashboardWidget } from '../ui/DashboardWidget'
 import { DataTable, type DataTableColumn, type DataTableRow } from '../ui/DataTable'
@@ -51,16 +51,17 @@ export function AdsReport({ campaignId, dateFrom, dateTo, sandbox = false }: Ads
   const columns = getColumns(showCampaign)
   const tableRows = transformRows(data, showCampaign)
 
-  function handleExport() {
+  function handleExport(format: ExportFormat) {
     if (!tableRows.length) return
     const filename =
       campaignId === 'all'
         ? `overall-ads-report-${dateFrom}-${dateTo}.csv`
         : `ads-report-${campaignId}-${dateFrom}-${dateTo}.csv`
-    exportToCsv(
+    exportData(
       filename,
       columns.map((c) => ({ key: c.key, label: c.label })),
-      tableRows
+      tableRows,
+      format
     )
   }
 

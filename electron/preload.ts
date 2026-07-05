@@ -15,10 +15,13 @@ const electronAPI: ElectronAPI = {
   getClientLogin: () => ipcRenderer.invoke('secure-store:get-client-login'),
   setClientLogin: (clientLogin) => ipcRenderer.invoke('secure-store:set-client-login', clientLogin),
   deleteClientLogin: () => ipcRenderer.invoke('secure-store:delete-client-login'),
+  getAuditChecklist: () => ipcRenderer.invoke('audit:get'),
+  setAuditChecklist: (items) => ipcRenderer.invoke('audit:set', items),
   directFetch: (url, options) => {
     console.log('[preload] directFetch options', options)
     return ipcRenderer.invoke('direct:fetch', url, options)
   },
+  uonFetch: (url, options) => ipcRenderer.invoke('uon:fetch', url, options),
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

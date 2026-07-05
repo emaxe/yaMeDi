@@ -4,7 +4,7 @@ import { getSources, useStatsComparison } from '../../api/metrica'
 import { useIsMobile } from '../../hooks/useMediaQuery'
 import { buildComparisonData, transformMetricaData } from '../../lib/chartData'
 import { CHART_COLORS, gridStyle, labelStyle, tooltipStyle, axisStroke, tickStyle, previousPeriodColor, legendStyle } from '../../lib/chartTheme'
-import { exportToCsv } from '../../lib/csvExport'
+import { exportData, type ExportFormat } from '../../lib/dataExport'
 import { formatMetricValue, getMetricName } from '../../lib/metrics'
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { DashboardWidget } from '../ui/DashboardWidget'
@@ -32,12 +32,13 @@ export function SourcesChart({ counterId, dateFrom, dateTo }: SourcesChartProps)
   const data = buildComparisonData(currentData, previousData, 'name', METRICS)
   const isMobile = useIsMobile()
 
-  function handleExport() {
+  function handleExport(format: ExportFormat) {
     if (!currentData.length) return
-    exportToCsv(
+    exportData(
       `sources-${dateFrom}-${dateTo}.csv`,
       [{ key: 'name', label: 'Источник' }, ...METRICS.map((m) => ({ key: m, label: getMetricName(m) }))],
-      currentData
+      currentData,
+      format
     )
   }
 

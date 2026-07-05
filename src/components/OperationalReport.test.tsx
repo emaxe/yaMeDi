@@ -33,6 +33,7 @@ function createMockData(): OperationalReportData {
         seoVisits: 110,
         cartEvents: 15,
         leads: 10,
+        leadRequests: 50,
         averageCheck: 100,
         cpa: 10,
         drr: 0.05,
@@ -44,6 +45,8 @@ function createMockData(): OperationalReportData {
         c1: 0.05,
         c2: 0.1,
         c3: 0.5,
+        cplRequest: 3,
+        cplQualified: 15,
       },
     ],
     total: {
@@ -66,6 +69,7 @@ function createMockData(): OperationalReportData {
       seoVisits: 110,
       cartEvents: 15,
       leads: 10,
+      leadRequests: 50,
       averageCheck: 100,
       cpa: 10,
       drr: 0.05,
@@ -77,6 +81,8 @@ function createMockData(): OperationalReportData {
       c1: 0.05,
       c2: 0.1,
       c3: 0.5,
+      cplRequest: 3,
+      cplQualified: 15,
     },
   }
 }
@@ -135,6 +141,53 @@ describe('OperationalReport', () => {
     // Значение «Выручка» (3 000,00 ₽) присутствует в обоих периодах-столбцах.
     const revenueCells = within(table).getAllByText('3 000,00 ₽')
     expect(revenueCells.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('hides C1, C2, C3 metric rows', () => {
+    vi.mocked(useOperationalReport).mockReturnValue({
+      data: createMockData(),
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useOperationalReport>)
+
+    render(<OperationalReport />)
+
+    const table = screen.getByTestId('operational-report-table')
+    expect(within(table).queryByText('C1')).not.toBeInTheDocument()
+    expect(within(table).queryByText('C2')).not.toBeInTheDocument()
+    expect(within(table).queryByText('C3')).not.toBeInTheDocument()
+  })
+
+  it('places source-specific and total rows at the bottom of the table', () => {
+    vi.mocked(useOperationalReport).mockReturnValue({
+      data: createMockData(),
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useOperationalReport>)
+
+    render(<OperationalReport />)
+
+    const table = screen.getByTestId('operational-report-table')
+    const bodyRows = within(table).getAllByRole('row').slice(1) // пропустить шапку
+    const rowLabels = bodyRows.map((row) => within(row).getAllByRole('cell')[0]?.textContent ?? '')
+
+    // Последние 8 строк — перенесённые вниз.
+    const bottomLabels = rowLabels.slice(-8)
+    expect(bottomLabels).toEqual([
+      'Direct выручка',
+      'Direct заказы',
+      'Direct расход',
+      'SEO выручка',
+      'SEO заказы',
+      'SEO трафик',
+      'Выручка',
+      'Заказы',
+    ])
+
+    // «Визиты» — первая строка.
+    expect(rowLabels[0]).toBe('Визиты')
   })
 
   it('shows error state and retry button', () => {

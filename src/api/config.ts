@@ -11,6 +11,9 @@ export const API_CONFIG = {
   login: {
     baseUrl: 'https://login.yandex.ru',
   },
+  uon: {
+    baseUrl: 'https://api.u-on.ru',
+  },
 } as const
 
 export const API_ENDPOINTS = {

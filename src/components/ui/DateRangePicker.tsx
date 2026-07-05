@@ -83,11 +83,11 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
         <div className="relative">
           <button
             onClick={() => setIsOpen((prev) => !prev)}
-            className="inline-flex items-center justify-center gap-2 h-10 px-3 rounded-lg bg-surface-elevated border border-outline text-body-sm text-on-surface hover:bg-surface-soft transition w-full sm:w-auto"
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-surface-elevated border border-outline text-body-sm text-on-surface hover:bg-surface-soft transition w-full sm:w-auto whitespace-nowrap"
             type="button"
           >
             <span>{activePreset?.label ?? 'Произвольный'}</span>
-            <ChevronDown className="w-4 h-4 text-on-surface-muted" aria-hidden="true" />
+            <ChevronDown className="w-4 h-4 text-on-surface-muted shrink-0" aria-hidden="true" />
           </button>
 
           {isOpen && (

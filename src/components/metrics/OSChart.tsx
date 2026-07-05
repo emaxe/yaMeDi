@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { getOS, useStatsComparison } from '../../api/metrica'
 import { transformMetricaData } from '../../lib/chartData'
 import { PIE_COLORS, tooltipStyle, labelStyle, pieLabel } from '../../lib/chartTheme'
-import { exportToCsv } from '../../lib/csvExport'
+import { exportData, type ExportFormat } from '../../lib/dataExport'
 import { getMetricName } from '../../lib/metrics'
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { MobileListCard } from '../mobile/MobileListCard'
@@ -28,16 +28,17 @@ export function OSChart({ counterId, dateFrom, dateTo }: OSChartProps) {
 
   const data = transformMetricaData(current.data, 'name').slice(0, 8)
 
-  function handleExport() {
+  function handleExport(format: ExportFormat) {
     if (!data.length) return
-    exportToCsv(
+    exportData(
       `os-${dateFrom}-${dateTo}.csv`,
       [
         { key: 'name', label: 'ОС' },
         { key: 'ym:s:visits', label: getMetricName('ym:s:visits') },
         { key: 'ym:s:users', label: getMetricName('ym:s:users') },
       ],
-      data
+      data,
+      format
     )
   }
 

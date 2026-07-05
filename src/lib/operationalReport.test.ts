@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import type { CampaignPerformanceReportRow, DateRange, MetricaData, OperationalProjectConfig } from '../types'
+import type { CampaignPerformanceReportRow, DateRange, MetricaData, OperationalProjectConfig, UonLead } from '../types'
 
 import {
   aggregateDirectCost,
   aggregateDirectFromSource,
   aggregateOrganicFromTrafficSource,
+  aggregateUonLeadsByDate,
   buildOperationalReportData,
   isDirectSource,
   isOrganicSource,
@@ -76,6 +77,20 @@ function createLeadsData(): MetricaData {
       { dimensions: [{ name: '2024-01-01' }], metrics: [3] },
       { dimensions: [{ name: '2024-01-02' }], metrics: [7] },
       { dimensions: [{ name: '2024-01-08' }], metrics: [10] },
+    ],
+  })
+}
+
+function createLeadRequestsData(): MetricaData {
+  return mockMetricaData({
+    query: {
+      metrics: ['ym:s:goal30950899reaches', 'ym:s:goal297174772reaches'],
+      dimensions: ['ym:s:date'],
+    },
+    data: [
+      { dimensions: [{ name: '2024-01-01' }], metrics: [5, 10] },
+      { dimensions: [{ name: '2024-01-02' }], metrics: [15, 20] },
+      { dimensions: [{ name: '2024-01-08' }], metrics: [25, 30] },
     ],
   })
 }
@@ -186,6 +201,18 @@ describe('operationalReport', () => {
       expect(result.get('2024-01-02')).toEqual({ cost: 100, conversions: 10 })
       expect(result.get('2024-01-08')).toEqual({ cost: 150, conversions: 15 })
     })
+
+    it('aggregates U-ON leads by date', () => {
+      const leads: UonLead[] = [
+        { id: 1, id_system: 1, dat: '2024-01-01 10:00', dat_lead: null, dat_close: null, dat_updated: null, status_id: '1', status: 'Новый', source_id: 1, source: 'test', manager_id: 1, manager_name: '', manager_surname: '', client_id: 1, client_name: '', client_phone: '', client_phone_mobile: '', client_email: '', utm_source: null, utm_medium: null, utm_campaign: null, utm_content: null, utm_term: null, calc_price: 0, calc_price_netto: 0, calc_increase: 0, calc_decrease: 0, notes: '', services: [], extended_fields: [] },
+        { id: 2, id_system: 2, dat: '2024-01-01 12:00', dat_lead: null, dat_close: null, dat_updated: null, status_id: '1', status: 'Новый', source_id: 1, source: 'test', manager_id: 1, manager_name: '', manager_surname: '', client_id: 2, client_name: '', client_phone: '', client_phone_mobile: '', client_email: '', utm_source: null, utm_medium: null, utm_campaign: null, utm_content: null, utm_term: null, calc_price: 0, calc_price_netto: 0, calc_increase: 0, calc_decrease: 0, notes: '', services: [], extended_fields: [] },
+        { id: 3, id_system: 3, dat: '2024-01-08 09:00', dat_lead: null, dat_close: null, dat_updated: null, status_id: '2', status: 'Думает', source_id: 1, source: 'test', manager_id: 1, manager_name: '', manager_surname: '', client_id: 3, client_name: '', client_phone: '', client_phone_mobile: '', client_email: '', utm_source: null, utm_medium: null, utm_campaign: null, utm_content: null, utm_term: null, calc_price: 0, calc_price_netto: 0, calc_increase: 0, calc_decrease: 0, notes: '', services: [], extended_fields: [] },
+      ]
+      const result = aggregateUonLeadsByDate(leads)
+      expect(result.get('2024-01-01')).toBe(2)
+      expect(result.get('2024-01-08')).toBe(1)
+      expect(result.has('2024-01-02')).toBe(false)
+    })
   })
 
   describe('buildOperationalReportData', () => {
@@ -200,7 +227,8 @@ describe('operationalReport', () => {
         createLeadsData(),
         createSourceEcommerceData(),
         createOrganicData(),
-        createDirectRows()
+        createDirectRows(),
+        createLeadRequestsData()
       )
 
       expect(data.rows).toHaveLength(2)
@@ -219,8 +247,11 @@ describe('operationalReport', () => {
       expect(week1.seoVisits).toBe(110)
       expect(week1.cartEvents).toBe(15)
       expect(week1.leads).toBe(10)
+      expect(week1.leadRequests).toBe(50)
       expect(week1.averageCheck).toBe(100)
       expect(week1.c2).toBe(0.1)
+      expect(week1.cplRequest).toBe(150 / 50)
+      expect(week1.cplQualified).toBe(150 / 10)
 
       const week2 = data.rows[1]
       expect(week2.name).toMatch(/^W2/)
@@ -236,6 +267,9 @@ describe('operationalReport', () => {
       expect(week2.seoVisits).toBe(70)
       expect(week2.cartEvents).toBe(15)
       expect(week2.leads).toBe(10)
+      expect(week2.leadRequests).toBe(55)
+      expect(week2.cplRequest).toBe(150 / 55)
+      expect(week2.cplQualified).toBe(150 / 10)
 
       expect(data.total.name).toBe('Итого')
       expect(data.total.revenue).toBe(6000)
@@ -250,8 +284,46 @@ describe('operationalReport', () => {
       expect(data.total.seoVisits).toBe(180)
       expect(data.total.cartEvents).toBe(30)
       expect(data.total.leads).toBe(20)
+      expect(data.total.leadRequests).toBe(105)
       expect(data.total.drr).toBe(0.05)
       expect(data.total.romi).toBe(19)
+      expect(data.total.cplRequest).toBe(300 / 105)
+      expect(data.total.cplQualified).toBe(300 / 20)
+    })
+
+    it('uses U-ON qualified leads for cplQualified when provided', () => {
+      const range: DateRange = { from: '2024-01-01', to: '2024-01-08' }
+      const uonLeads: UonLead[] = [
+        { id: 1, id_system: 1, dat: '2024-01-01 10:00', dat_lead: null, dat_close: null, dat_updated: null, status_id: '1', status: 'Новый', source_id: 1, source: 'test', manager_id: 1, manager_name: '', manager_surname: '', client_id: 1, client_name: '', client_phone: '', client_phone_mobile: '', client_email: '', utm_source: null, utm_medium: null, utm_campaign: null, utm_content: null, utm_term: null, calc_price: 0, calc_price_netto: 0, calc_increase: 0, calc_decrease: 0, notes: '', services: [], extended_fields: [] },
+        { id: 2, id_system: 2, dat: '2024-01-02 11:00', dat_lead: null, dat_close: null, dat_updated: null, status_id: '1', status: 'Новый', source_id: 1, source: 'test', manager_id: 1, manager_name: '', manager_surname: '', client_id: 2, client_name: '', client_phone: '', client_phone_mobile: '', client_email: '', utm_source: null, utm_medium: null, utm_campaign: null, utm_content: null, utm_term: null, calc_price: 0, calc_price_netto: 0, calc_increase: 0, calc_decrease: 0, notes: '', services: [], extended_fields: [] },
+        { id: 3, id_system: 3, dat: '2024-01-08 09:00', dat_lead: null, dat_close: null, dat_updated: null, status_id: '2', status: 'Думает', source_id: 1, source: 'test', manager_id: 1, manager_name: '', manager_surname: '', client_id: 3, client_name: '', client_phone: '', client_phone_mobile: '', client_email: '', utm_source: null, utm_medium: null, utm_campaign: null, utm_content: null, utm_term: null, calc_price: 0, calc_price_netto: 0, calc_increase: 0, calc_decrease: 0, notes: '', services: [], extended_fields: [] },
+      ]
+
+      const data = buildOperationalReportData(
+        range,
+        mockProject,
+        createEcommerceData(),
+        createTrafficData(),
+        createFunnelData(),
+        createLeadsData(),
+        createSourceEcommerceData(),
+        createOrganicData(),
+        createDirectRows(),
+        createLeadRequestsData(),
+        uonLeads
+      )
+
+      // Week 1: 2 U-ON qualified leads (days 01-02), overriding Metrika leads (10)
+      expect(data.rows[0].leads).toBe(2)
+      expect(data.rows[0].cplQualified).toBe(150 / 2)
+
+      // Week 2: 1 U-ON qualified lead (day 08), overriding Metrika leads (10)
+      expect(data.rows[1].leads).toBe(1)
+      expect(data.rows[1].cplQualified).toBe(150 / 1)
+
+      // Total: 3 U-ON qualified leads
+      expect(data.total.leads).toBe(3)
+      expect(data.total.cplQualified).toBe(300 / 3)
     })
   })
 })

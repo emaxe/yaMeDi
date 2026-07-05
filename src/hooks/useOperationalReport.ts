@@ -7,8 +7,10 @@ import {
   getDailySourceEcommerceSummary,
   getEcommerceSummary,
   getFunnelSummary,
+  getLeadRequests,
   getTrafficSummary,
 } from '../api/metrica'
+import { getQualifiedLeads, getUonLeads, type UonLead } from '../api/uon'
 import { getOperationalProjectById } from '../config/operationalProjects'
 import { buildOperationalReportData, type OperationalReportData } from '../lib/operationalReport'
 import type { DateRange } from '../types'
@@ -33,8 +35,10 @@ export function useOperationalReport(projectId: string | undefined, dates: DateR
       }
 
       const directLogin = project.directClientLogin || clientLogin
+      const hasLeadGoals = project.leadGoalIds && project.leadGoalIds.length > 0
+      const hasUon = !!project.uonApiKey
 
-      const [ecommerce, traffic, funnel, leads, sourceEcommerce, organic, directRows] = await Promise.all([
+      const [ecommerce, traffic, funnel, leads, sourceEcommerce, organic, directRows, leadRequests] = await Promise.all([
         getEcommerceSummary(token, project.counterId, dates.from, dates.to, project.purchasesMetric),
         getTrafficSummary(token, project.counterId, dates.from, dates.to),
         getFunnelSummary(token, project.counterId, dates.from, dates.to, {
@@ -47,7 +51,20 @@ export function useOperationalReport(projectId: string | undefined, dates: DateR
         getDailySourceEcommerceSummary(token, project.counterId, dates.from, dates.to, project.purchasesMetric),
         getDailyOrganicSummary(token, project.counterId, dates.from, dates.to, project.purchasesMetric),
         getOverallCampaignReport(token, directLogin, dates.from, dates.to, sandbox),
+        hasLeadGoals
+          ? getLeadRequests(token, project.counterId, dates.from, dates.to, project.leadGoalIds!)
+          : Promise.resolve(undefined),
       ])
+
+      let uonResult: UonLead[] | undefined
+      let uonError: string | undefined
+      if (hasUon) {
+        try {
+          uonResult = await getUonLeads(project.uonApiKey!, dates.from, dates.to).then(getQualifiedLeads)
+        } catch (err) {
+          uonError = err instanceof Error ? err.message : 'Ошибка загрузки данных U-ON'
+        }
+      }
 
       return buildOperationalReportData(
         dates,
@@ -58,7 +75,10 @@ export function useOperationalReport(projectId: string | undefined, dates: DateR
         leads,
         sourceEcommerce,
         organic,
-        directRows
+        directRows,
+        leadRequests,
+        uonResult,
+        uonError
       )
     },
     enabled: !!projectId && !!token && !!dates.from && !!dates.to,

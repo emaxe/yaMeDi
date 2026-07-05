@@ -16,6 +16,8 @@ const Campaigns = lazy(() => import('./components/Campaigns'))
 const CampaignAnalytics = lazy(() => import('./components/CampaignAnalytics'))
 const OverallAnalytics = lazy(() => import('./components/OverallAnalytics').then((m) => ({ default: m.OverallAnalytics })))
 const OperationalReport = lazy(() => import('./components/OperationalReport'))
+const AuditChecklist = lazy(() => import('./components/AuditChecklist'))
+const KpiDashboard = lazy(() => import('./components/kpi/KpiDashboard'))
 
 function TabLoader() {
   return (
@@ -54,6 +56,13 @@ export default function App() {
               {activeTab === 'token' && (
                 <Suspense fallback={<TabLoader />}>
                   <TokenSetup />
+                </Suspense>
+              )}
+            </ErrorBoundary>
+            <ErrorBoundary>
+              {activeTab === 'kpi-dashboard' && (
+                <Suspense fallback={<TabLoader />}>
+                  <KpiDashboard />
                 </Suspense>
               )}
             </ErrorBoundary>
@@ -101,6 +110,13 @@ export default function App() {
               {activeTab === 'operational-report' && (
                 <Suspense fallback={<TabLoader />}>
                   <OperationalReport />
+                </Suspense>
+              )}
+            </ErrorBoundary>
+            <ErrorBoundary>
+              {activeTab === 'audit' && (
+                <Suspense fallback={<TabLoader />}>
+                  <AuditChecklist />
                 </Suspense>
               )}
             </ErrorBoundary>

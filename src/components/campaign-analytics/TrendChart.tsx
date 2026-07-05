@@ -10,9 +10,9 @@ import {
 } from 'recharts'
 
 import { useCampaignPerformanceReport } from '../../hooks/useCampaignReports'
-import type { CampaignPerformanceReportRow, ChartDataPoint } from '../../types'
-import { exportToCsv } from '../../lib/csvExport'
 import { CHART_COLORS, axisStroke, gridStyle, labelStyle, legendStyle, tickStyle, tooltipStyle } from '../../lib/chartTheme'
+import { exportData, type ExportFormat } from '../../lib/dataExport'
+import type { CampaignPerformanceReportRow, ChartDataPoint } from '../../types'
 import { MobileChartContainer } from '../mobile/MobileChartContainer'
 import { DashboardWidget } from '../ui/DashboardWidget'
 
@@ -60,15 +60,16 @@ export function TrendChart({ campaignId, dateFrom, dateTo, sandbox = false }: Tr
 
   const chartData = transformToChartData(data)
 
-  function handleExport() {
+  function handleExport(format: ExportFormat) {
     if (!chartData.length) return
     const filename = campaignId === 'all'
       ? `overall-trend-${dateFrom}-${dateTo}.csv`
       : `campaign-trend-${campaignId}-${dateFrom}-${dateTo}.csv`
-    exportToCsv(
+    exportData(
       filename,
       [{ key: 'date', label: 'Дата' }, ...METRICS.map((m) => ({ key: m.key, label: m.label }))],
-      chartData
+      chartData,
+      format
     )
   }
 

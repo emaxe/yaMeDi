@@ -103,6 +103,26 @@ export const campaignsResponseSchema = z.object({
     .optional(),
 })
 
+export interface AgencyClient {
+  Login: string
+  Type: string
+  Archived: boolean
+}
+
+export const agencyClientSchema = z.object({
+  Login: z.string(),
+  Type: z.string(),
+  Archived: z.union([z.boolean(), z.string()]).transform((v) => v === true || v === 'Yes'),
+})
+
+export const agencyClientsResponseSchema = z.object({
+  result: z
+    .object({
+      Clients: z.array(agencyClientSchema).default([]),
+    })
+    .optional(),
+})
+
 export interface TokenCheckResult {
   valid: boolean
   metrica: boolean
@@ -249,6 +269,10 @@ export interface OperationalProjectConfig {
   orderGoalId?: number
   /** ID цели «Собрано контактов». */
   contactGoalId?: number
+  /** ID целей-заявок (префикс ## в регламенте). Сумма достижений используется для CPL заявки. */
+  leadGoalIds?: number[]
+  /** API-ключ U-ON CRM. Если задан, CPL квал. лида считается по реальным данным CRM. */
+  uonApiKey?: string
   /** Дополнительные рекламные кабинеты, расходы которых суммируются в строку «Бюджет». */
   extraAdCosts?: { name: string; clientLogin: string }[]
 }
@@ -263,5 +287,69 @@ export const operationalProjectConfigSchema = z.object({
   cartGoalId: z.number().optional(),
   orderGoalId: z.number().optional(),
   contactGoalId: z.number().optional(),
+  leadGoalIds: z.array(z.number()).optional(),
+  uonApiKey: z.string().optional(),
   extraAdCosts: z.array(z.object({ name: z.string(), clientLogin: z.string() })).optional(),
 })
+
+export type AuditStatus = 'ok' | 'missing' | 'pending'
+
+export interface AuditChecklistItem {
+  id: string
+  label: string
+  lastCheckedDate: string | null
+  status: AuditStatus
+  intervalDays: number
+}
+
+export interface AuditChecklistState {
+  items: AuditChecklistItem[]
+}
+
+export interface UonLead {
+  id: number
+  id_system: number
+  dat: string
+  dat_lead: string | null
+  dat_close: string | null
+  dat_updated: string | null
+  status_id: string
+  status: string
+  source_id: number
+  source: string
+  manager_id: number
+  manager_name: string
+  manager_surname: string
+  client_id: number
+  client_name: string
+  client_phone: string
+  client_phone_mobile: string
+  client_email: string
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  utm_content: string | null
+  utm_term: string | null
+  calc_price: number
+  calc_price_netto: number
+  calc_increase: number
+  calc_decrease: number
+  notes: string
+  services: unknown[]
+  extended_fields: unknown[]
+}
+
+export interface UonStatus {
+  id: number
+  name: string
+  ord: number
+  is_archive: number
+}
+
+export interface UonLeadsResponse {
+  leads: UonLead[]
+}
+
+export interface UonStatusesResponse {
+  records: UonStatus[]
+}

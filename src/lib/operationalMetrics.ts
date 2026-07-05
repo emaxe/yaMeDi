@@ -13,6 +13,7 @@ export interface OperationalRawData {
   seoVisits: number
   cartEvents: number
   leads: number
+  leadRequests: number
 }
 
 export interface OperationalMetrics extends OperationalRawData {
@@ -27,6 +28,8 @@ export interface OperationalMetrics extends OperationalRawData {
   c1: number
   c2: number
   c3: number
+  cplRequest: number
+  cplQualified: number
 }
 
 export function calculateAverageCheck(revenue: number, orders: number): number {
@@ -37,6 +40,11 @@ export function calculateAverageCheck(revenue: number, orders: number): number {
 export function calculateCpa(cost: number, conversions: number): number {
   if (conversions === 0) return 0
   return cost / conversions
+}
+
+export function calculateCpl(cost: number, count: number): number {
+  if (count === 0) return 0
+  return cost / count
 }
 
 export function calculateDrr(cost: number, revenue: number): number {
@@ -78,5 +86,7 @@ export function calculateOperationalMetrics(raw: OperationalRawData): Operationa
     c1: calculateC1(raw.cartEvents, raw.visits),
     c2: calculateC2(raw.orders, raw.visits),
     c3: calculateC3(raw.orders, raw.cartEvents),
+    cplRequest: calculateCpl(raw.totalCost, raw.leadRequests),
+    cplQualified: calculateCpl(raw.totalCost, raw.leads),
   }
 }

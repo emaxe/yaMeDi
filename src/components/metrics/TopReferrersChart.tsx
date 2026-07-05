@@ -1,6 +1,6 @@
 import { getReferrers, useStatsComparison } from '../../api/metrica'
 import { transformMetricaData } from '../../lib/chartData'
-import { exportToCsv } from '../../lib/csvExport'
+import { exportData, type ExportFormat } from '../../lib/dataExport'
 import { getMetricName } from '../../lib/metrics'
 import { MobileListCard } from '../mobile/MobileListCard'
 import { DashboardWidget } from '../ui/DashboardWidget'
@@ -22,16 +22,17 @@ export function TopReferrersChart({ counterId, dateFrom, dateTo }: TopReferrersC
 
   const data = transformMetricaData(current.data, 'name').slice(0, 20)
 
-  function handleExport() {
+  function handleExport(format: ExportFormat) {
     if (!data.length) return
-    exportToCsv(
+    exportData(
       `referrers-${dateFrom}-${dateTo}.csv`,
       [
         { key: 'name', label: 'Реферер' },
         { key: 'ym:s:visits', label: getMetricName('ym:s:visits') },
         { key: 'ym:s:users', label: getMetricName('ym:s:users') },
       ],
-      data
+      data,
+      format
     )
   }
 
